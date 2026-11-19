@@ -188,13 +188,17 @@ ft.ks='Foodtruck';lesung.ks='Eigenveranstaltung';
 ft.log=[{p:'mira',t:'Zugesagt: Theke am Foodtruck',am:'18.11., 16:04'},{p:'deniz',t:'Jona für „Fahren und Aufbau“ angefragt',am:'18.11., 11:30'},{p:'deniz',t:'Vorgang aus Vorlage „Foodtruck-Einsatz“ angelegt',am:'17.11., 10:12'}];
 const KS=['–','Eigenveranstaltung','Vermietung','Projekt Nachbarschaft (Fördermittel)','Kinder und Jugend (Fördermittel)','Foodtruck','Verein allgemein'];
 const INV=[
- {id:1,n:'Bühne (4 × 3 m, Elemente)',m:1,o:'Lager Keller',res:[{d:'2026-11-28',z:'Nachbarschaftsfest (Foodtruck)',p:'deniz'}]},
- {id:2,n:'Musikanlage (2 Boxen, Mischpult)',m:1,o:'Saal, Technikschrank',res:[{d:'2026-11-27',z:'Lesung',p:'mira'}]},
- {id:3,n:'Biertischgarnituren',m:10,o:'Lager Hof',res:[{d:'2026-11-21',z:'Verliehen an Nachbarschaftsverein (Vertrag „Nur Equipment“)',p:'deniz'}]},
- {id:4,n:'Pavillon 3 × 3 m',m:2,o:'Lager Hof',res:[{d:'2026-11-28',z:'Nachbarschaftsfest (Foodtruck)',p:'deniz'}]},
- {id:5,n:'Kabeltrommel 25 m',m:2,o:'Lager Keller',res:[]},
- {id:6,n:'Foodtruck',m:1,o:'Hof',res:[{d:'2026-11-28',z:'Nachbarschaftsfest',p:'deniz'}]},
- {id:7,n:'Gesangsmikrofon',m:2,o:'Saal, Technikschrank',res:[]}];
+ {id:1,k:'Bühne',n:'Bühne (4 × 3 m, Elemente)',m:1,o:'Lager Keller',res:[{d:'2026-11-28',z:'Nachbarschaftsfest (Foodtruck)',p:'deniz'}]},
+ {id:2,k:'Tontechnik',n:'Musikanlage (2 Boxen, Mischpult)',m:1,o:'Saal, Technikschrank',res:[{d:'2026-11-27',z:'Lesung',p:'mira'}]},
+ {id:3,k:'Möbel',n:'Biertischgarnituren',m:10,o:'Lager Hof',res:[{d:'2026-11-21',z:'Verliehen an Nachbarschaftsverein (Vertrag „Nur Equipment“)',p:'deniz'}]},
+ {id:4,k:'Zelt und Draußen',n:'Pavillon 3 × 3 m',m:2,o:'Lager Hof',res:[{d:'2026-11-28',z:'Nachbarschaftsfest (Foodtruck)',p:'deniz'}]},
+ {id:5,k:'Strom und Kabel',n:'Kabeltrommel 25 m',m:2,o:'Lager Keller',res:[]},
+ {id:6,k:'Fahrzeug',n:'Foodtruck',m:1,o:'Hof',res:[{d:'2026-11-28',z:'Nachbarschaftsfest',p:'deniz'}]},
+ {id:7,k:'Tontechnik',n:'Gesangsmikrofon',m:2,o:'Saal, Technikschrank',res:[]},
+ {id:8,k:'Videotechnik',n:'Beamer',m:1,o:'Büro',res:[]},
+ {id:9,k:'Lichttechnik',n:'Scheinwerfer (LED)',m:4,o:'Saal',res:[]},
+ {id:10,k:'Küche',n:'Kaffeemaschine',m:1,o:'Küche',res:[]}];
+const KAT=['Tontechnik','Lichttechnik','Videotechnik','Bühne','Strom und Kabel','Küche','Theke','Geschirr und Gläser','Kasse','Möbel','Werkzeug','Reinigung','Sicherheit','Haustechnik','Zelt und Draußen','Fahrzeug','Spiel und Sport','Musikinstrumente','Basteln','Foto und Video','Werbemittel','Büro und IT'];
 let invId=100,ekId=1;
 const EK=[
  {id:ekId++,n:'Kabeltrommel 25 m',m:1,grund:'kaputt (Kabel beschädigt)',quelle:'Inventar',o:'Lager Keller',von:'jona',am:'17.11.'},
@@ -540,10 +544,10 @@ function vEinkauf(){let h='<div class="wrap"><h1>Einkaufsliste</h1><p class="sub
  return h+'<div class="box" style="margin-top:12px"><p><strong>Gekauft</strong> heißt: Der Gegenstand kommt zurück ins Inventar, wenn er von dort stammt.</p><p><strong>Noch offen für die Runde:</strong> Wer kauft ein, und ab welchem Betrag braucht ein Kauf eine Freigabe?</p></div></div>'}
 
 function vInventar(){let h='<div class="wrap"><h1>Inventar und Verleih</h1><p class="sub">Was wir haben, wo es steht und wann es gebraucht wird. Wer etwas reserviert, sieht sofort, ob es an dem Tag schon weg ist.</p>';
- h+='<section class="panel"><div class="scroll"><table><thead><tr><th>Gegenstand</th><th>Anzahl</th><th>Standort</th><th>Reserviert oder verliehen</th><th></th></tr></thead><tbody>'+
- INV.map(x=>'<tr><td>'+esc(x.n)+'</td><td>'+x.m+'</td><td>'+esc(x.o)+'</td><td>'+(x.res.length?x.res.slice().sort((a,b)=>a.d.localeCompare(b.d)).map(r=>'<div><strong>'+fd(r.d)+'</strong> '+esc(r.z)+' <span class="muted">('+esc(pn(r.p))+')</span></div>').join(''):'<span class="muted">frei</span>')+'</td><td><button class="small" data-act="invdel" data-x="'+x.id+'">Kaputt oder weg</button></td></tr>'+
- (S.invDel===x.id?'<tr><td colspan="5"><form class="inline" data-form="invdel" data-x="'+x.id+'" style="margin:0"><label>Wie viele?<input id="id-m" type="number" min="1" max="'+x.m+'" value="1" required></label><label>Was ist passiert?<select id="id-g"><option>kaputt</option><option>verloren</option><option>gestohlen</option><option>ausgemustert</option></select></label><label style="flex-direction:row;gap:6px;align-items:center;color:var(--fg)"><input id="id-ek" type="checkbox" checked> Auf die Einkaufsliste</label><button class="primary">Austragen</button><button type="button" data-act="invdel" data-x="'+x.id+'">Abbrechen</button></form></td></tr>':'')).join('')+'</tbody></table></div>';
- h+='<form class="inline" data-form="invneu"><label class="grow">Neuer Gegenstand<input id="in-n" required placeholder="z. B. Stehtisch"></label><label>Anzahl<input id="in-m" type="number" min="1" value="1" required></label><label>Standort<input id="in-o" placeholder="z. B. Lager Hof"></label><button>Ins Inventar</button></form>';
+ h+='<section class="panel"><div class="scroll"><table><thead><tr><th>Gegenstand</th><th>Kategorie</th><th>Anzahl</th><th>Standort</th><th>Reserviert oder verliehen</th><th></th></tr></thead><tbody>'+
+ INV.slice().sort((p,q)=>(p.k||'').localeCompare(q.k||'')||p.n.localeCompare(q.n)).map(x=>'<tr><td>'+esc(x.n)+'</td><td><span class="chip">'+esc(x.k||'–')+'</span></td><td>'+x.m+'</td><td>'+esc(x.o)+'</td><td>'+(x.res.length?x.res.slice().sort((a,b)=>a.d.localeCompare(b.d)).map(r=>'<div><strong>'+fd(r.d)+'</strong> '+esc(r.z)+' <span class="muted">('+esc(pn(r.p))+')</span></div>').join(''):'<span class="muted">frei</span>')+'</td><td><button class="small" data-act="invdel" data-x="'+x.id+'">Kaputt oder weg</button></td></tr>'+
+ (S.invDel===x.id?'<tr><td colspan="6"><form class="inline" data-form="invdel" data-x="'+x.id+'" style="margin:0"><label>Wie viele?<input id="id-m" type="number" min="1" max="'+x.m+'" value="1" required></label><label>Was ist passiert?<select id="id-g"><option>kaputt</option><option>verloren</option><option>gestohlen</option><option>ausgemustert</option></select></label><label style="flex-direction:row;gap:6px;align-items:center;color:var(--fg)"><input id="id-ek" type="checkbox" checked> Auf die Einkaufsliste</label><button class="primary">Austragen</button><button type="button" data-act="invdel" data-x="'+x.id+'">Abbrechen</button></form></td></tr>':'')).join('')+'</tbody></table></div>';
+ h+='<form class="inline" data-form="invneu"><label class="grow">Neuer Gegenstand<input id="in-n" required placeholder="z. B. Stehtisch"></label><label>Kategorie<select id="in-k">'+KAT.map(k=>'<option>'+k+'</option>').join('')+'</select></label><label>Anzahl<input id="in-m" type="number" min="1" value="1" required></label><label>Standort<input id="in-o" placeholder="z. B. Lager Hof"></label><button>Ins Inventar</button></form>';
  h+='<form class="inline" data-form="inv"><label>Gegenstand<select id="iv-x">'+INV.map(x=>'<option value="'+x.id+'">'+esc(x.n)+'</option>').join('')+'</select></label><label>Datum<input id="iv-d" type="date" value="2026-11-28" required></label><label class="grow">Wofür oder an wen<input id="iv-z" required placeholder="z. B. Verleih an Kulturverein"></label><button class="primary">Reservieren</button></form>';
  if(S.invMsg)h+='<div class="box crit" style="margin-top:10px"><p>'+S.invMsg+'</p></div>';
  return h+'<p class="muted" style="font-size:13px">Verleih nach außen läuft über die Vertragsvorlage „Nur Equipment“ und braucht eine Freigabe.</p></section></div>'}
@@ -604,7 +608,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.d
   x.m-=n;if(x.m<=0)INV.splice(INV.indexOf(x),1);
   if(ek)EK.push({id:ekId++,n:x.n,m:n,grund:g,quelle:'Inventar',o:x.o,von:S.me,am:'19.11.'});
   S.invDel=null;toast(n+' × '+x.n+' ausgetragen'+(ek?', steht auf der Einkaufsliste.':'.'));render()}
- else if(d.form==='invneu'){INV.push({id:invId++,n:val('in-n'),m:Math.max(1,+val('in-m')||1),o:val('in-o')||'noch festlegen',res:[]});toast('Ins Inventar aufgenommen.');render()}
+ else if(d.form==='invneu'){INV.push({id:invId++,k:val('in-k'),n:val('in-n'),m:Math.max(1,+val('in-m')||1),o:val('in-o')||'noch festlegen',res:[]});toast('Ins Inventar aufgenommen.');render()}
  else if(d.form==='ekneu'){EK.push({id:ekId++,n:val('ek-n'),m:Math.max(1,+val('ek-m')||1),grund:'gebraucht',quelle:'eingetragen',o:'',von:S.me,am:'19.11.'});toast('Steht auf der Einkaufsliste.');render()}
  else if(d.form==='ext'){EX.push({id:EX.length+1,n:val('ex-n'),f:val('ex-f'),k:val('ex-k'),kond:val('ex-c')||'nach Absprache',notiz:val('ex-o')});toast('Hinzugefügt.');render()}
  else if(d.form==='wv'){a.wv=val('wv-d');a.wvText=val('wv-t');logA(a,'Wiedervorlage am '+fd(a.wv)+': '+a.wvText);S.form='';toast('Wiedervorlage gesetzt.');render()}
