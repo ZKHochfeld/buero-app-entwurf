@@ -149,7 +149,7 @@ M.push({b:'pe',p:'mira',r:'zuständig',f:true,seit:'2026-11-18',status:'angefrag
 
 let nid=100;
 const A=[];
-function T(o){const a=Object.assign({id:++nid,parent:null,p:'',frist:'',fs:'offen',art:'Büro',z:'',fn:false,fg:null,grund:'',k:[],pack:null,datum:'',von:'',bis:'',notiz:'',wv:'',wvText:'',ks:'',log:[],ext:null,fach:'',rider:null,rechnung:null},o);A.push(a);return a}
+function T(o){const a=Object.assign({id:++nid,parent:null,p:'',frist:'',fs:'offen',art:'Büro',z:'',fn:false,fg:null,grund:'',k:[],pack:null,datum:'',von:'',bis:'',notiz:'',wv:'',wvText:'',ks:'',log:[],ext:null,fach:'',rider:null,rechnung:null,kasse:null},o);A.push(a);return a}
 T({t:'Raumanfrage Geburtstagsfeier am 12.12. beantworten',b:'vm',p:'deniz',frist:'2026-11-21',fs:'arbeit',fn:true,notiz:'Anfrage kam über Bookings. Vortreffen am Telefon hat stattgefunden.',ks:'Vermietung',wv:'2026-11-19',wvText:'Rückruf: Gästezahl und Ende der Feier klären'});
 T({t:'Mietvertrag Chorprobe (Januar) vorbereiten',b:'vm',p:'deniz',frist:'2026-11-17',fn:true});
 T({t:'Schlüsselübergabe für den Chor klären',b:'vm',frist:'2026-11-25'});
@@ -200,7 +200,8 @@ const INV=[
  {id:10,k:'Küche',n:'Kaffeemaschine',m:1,o:'Küche',res:[]},
  {id:11,k:'Geschirr und Gläser',n:'Einwegteller (Verbrauch)',m:120,mb:100,o:'Küche, Regal 2',res:[]}];
 INV.push({id:12,k:'Geschirr und Gläser',n:'Einwegbecher (Verbrauch)',m:200,mb:150,o:'Küche, Regal 2',res:[]});
-const PREIS={2:1200,5:45,7:110,8:900,9:150,10:350,11:0.12,12:0.08};
+INV.push({id:13,k:'Geschirr und Gläser',n:'Pommesschalen (Verbrauch)',m:170,mb:150,o:'Foodtruck, Fach unten',res:[]});
+const PREIS={2:1200,5:45,7:110,8:900,9:150,10:350,11:0.12,12:0.08,13:0.05};
 const eur=v=>v.toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 const VB=[];
 const FIN={
@@ -275,6 +276,7 @@ const CAL=[
  {id:'va',name:'Veranstaltungen',c:'#e63323',pub:true},{id:'te',name:'Termine',c:'#3b7dd8'},
  {id:'ur',name:'Urlaub',c:'#8a7a6a'},{id:'rb',name:'Raumbelegung (neu)',c:'#d99a12'}];
 const E=[
+ {cal:'va',d:'2026-11-15',von:'14:00',bis:'18:00',t:'Soli-Café mit Foodtruck',o:'Hof',web:true},
  {cal:'va',d:'2026-11-22',von:'18:00',bis:'22:00',t:'Kiezabend',o:'Saal',web:true},
  {cal:'va',d:'2026-11-27',von:'18:00',bis:'20:00',t:'Lesung: Geschichten aus Hochfeld',o:'Saal',web:true},
  {cal:'va',d:'2026-11-28',von:'14:00',bis:'18:00',t:'Nachbarschaftsfest mit Foodtruck',o:'draußen',web:false},
@@ -289,6 +291,21 @@ const E=[
  {cal:'rb',d:'2026-11-27',von:'19:00',bis:'22:00',t:'Saal: Chorprobe',o:'Saal',st:'optioniert'},
  {cal:'rb',d:'2026-11-26',von:'14:00',bis:'17:00',t:'Gruppenraum: Bastelnachmittag',o:'Gruppenraum',st:'fest'}];
 E.forEach((e,i)=>e.i=i);
+// Kasse: Zählprotokoll je Veranstaltung (Beträge in Cent, damit nichts falsch rundet)
+const KASSE={};
+const STUECK=[20000,10000,5000,2000,1000,500,200,100,50,20,10,5,2,1];
+const cent=c=>eur(c/100);
+const stLbl=c=>c>=500?(c/100)+' € (Schein)':c>=100?(c/100)+' € (Münze)':c+' Cent';
+function kSum(o){return STUECK.reduce((s,c)=>s+c*(+o[c]||0),0)}
+function kCalc(k){const a=kSum(k.a),e=kSum(k.e),aus=k.aus.reduce((s,x)=>s+x.c,0);return {a,e,aus,ein:e-a+aus}}
+// Nach jeder Veranstaltung: Übersicht bei Finanzen und Aufgabe „Kasse abrechnen“ von selbst anlegen
+function vaName(e){const dt=new Date(e.d+'T12:00:00');return e.t+' ('+TAGE[(dt.getDay()+6)%7]+' '+e.d.slice(8)+'.'+e.d.slice(5,7)+'.)'}
+function nachVeranstaltung(){E.filter(e=>e.cal==='va'&&e.d<HEUTE).forEach(e=>{const v=vaName(e);if(VERANST.includes(v))return;
+ VERANST.unshift(v);FIN[v]=[];
+ const t=T({t:'Kasse abrechnen: '+v,b:'fi',frist:new Date(Date.parse(e.d)+7*864e5).toISOString().slice(0,10),ks:/Foodtruck/.test(v)?'Foodtruck':'Eigenveranstaltung',kasse:{va:v},
+  notiz:'Von selbst angelegt, weil die Veranstaltung vorbei ist. Die Übersicht „Einnahmen und Ausgaben“ ist auch schon angelegt. Bitte das Zählprotokoll ausfüllen.'});
+ t.log=[{p:'auto',t:'Nach der Veranstaltung von selbst angelegt',am:e.d.slice(8)+'.'+e.d.slice(5,7)+'., 23:00'}]})}
+nachVeranstaltung();
 const ST={angefragt:'angefragt',optioniert:'optioniert (vorgemerkt)',fest:'fest gebucht',gesperrt:'gesperrt'};
 
 const S={me:null,view:'login',b:null,a:null,tab:'aufgaben',fv:'knopf',cals:{va:1,te:1,ur:1,rb:1},form:'',bell:false,vorlage:null};
@@ -331,6 +348,7 @@ function hinweise(){const me=S.me,h=[];
   if(a.fn&&!a.fg&&open(a)&&canFg(a.b))h.push({a,t:'Freigabe fehlt: '+a.t});
   if(a.wv&&a.wv<=HEUTE&&open(a)&&a.p===me)h.push({a,t:'Wiedervorlage: '+a.wvText});
   if(a.rechnung&&open(a)&&isMem('fi',me))h.push({a,t:'Neue Verbrauchsrechnung: '+a.rechnung.va});
+  if(a.kasse&&open(a)&&isMem('fi',me))h.push({a,t:'Veranstaltung vorbei, Kasse abrechnen: '+a.kasse.va});
   if(a.rider&&!a.rider.ok&&isMem(a.b,me))h.push({a,t:'Neuer Tech-Rider eingegangen: '+a.t});
  });return h}
 
@@ -456,6 +474,7 @@ function vAufgabe(){const a=A.find(x=>x.id===S.a),b=bb(a.b),me=S.me,par=a.parent
  h+='</div></div>';
  if(a.rider)h+='<div style="margin-top:14px">'+riderHtml(a)+'</div>';
  if(a.rechnung)h+='<div style="margin-top:14px">'+rechnungHtml(a)+'</div>';
+ if(a.kasse)h+='<div style="margin-top:14px">'+kasseHtml(a.kasse.va)+'</div>';
  if(!a.parent){
   h+='<h2>Teilaufgaben ('+kids.filter(open).length+' offen von '+kids.length+')</h2>'+(kids.length?'<section class="panel"><ul class="list">'+kids.map(k=>aItem(k)).join('')+'</ul></section>':'')+
   '<div style="margin-top:10px">'+(S.form==='teil'?formNeueAufgabe(b.id,a.id):'<button data-act="form" data-f="teil">Teilaufgabe hinzufügen</button>')+'</div>';
@@ -570,17 +589,45 @@ function vInventar(){const fin=isMem('fi',S.me);let h='<div class="wrap"><h1>Inv
  return h+'</div>'}
 function vFinanzen(){if(!isMem('fi',S.me))return '<div class="wrap"><h1>Finanzen</h1><div class="box"><p>Diese Seite sehen nur die Personen, die Finanzen machen.</p></div></div>';
  const sum=(v,art)=>FIN[v].filter(x=>x.art===art).reduce((s,x)=>s+x.b,0);
- let h='<div class="wrap"><h1>Einnahmen und Ausgaben</h1><p class="sub">Je Veranstaltung, auch Foodtruck. Nur für Finanzen sichtbar. Verbrauchsrechnungen kommen von selbst als Ausgabe dazu. Alle Zahlen im Entwurf sind erfunden.</p>';
+ let h='<div class="wrap"><h1>Einnahmen und Ausgaben</h1><p class="sub">Je Veranstaltung, auch Foodtruck. Nur für Finanzen sichtbar. Ist eine Veranstaltung vorbei, legt die App ihre Übersicht und die Aufgabe „Kasse abrechnen“ von selbst an (im Entwurf: Soli-Café am 15.11.). Verbrauchsrechnungen und die Kassenabrechnung kommen von selbst dazu. Alle Zahlen im Entwurf sind erfunden.</p>';
  h+='<section class="panel scroll"><table><thead><tr><th>Veranstaltung</th><th>Einnahmen</th><th>Ausgaben</th><th>Ergebnis</th></tr></thead><tbody>'+VERANST.map(v=>{const e=sum(v,'Einnahme'),a=sum(v,'Ausgabe'),r=e-a;return '<tr><td>'+esc(v)+'</td><td>'+eur(e)+'</td><td>'+eur(a)+'</td><td><span class="chip'+(r>=0?' ok':' crit')+'">'+eur(r)+'</span></td></tr>'}).join('')+'</tbody></table></section>';
  VERANST.forEach((v,i)=>{const e=sum(v,'Einnahme'),a=sum(v,'Ausgabe');
   h+='<h2>'+esc(v)+'</h2><section class="panel">'+(FIN[v].length?'<div class="scroll"><table><thead><tr><th>Art</th><th>Posten</th><th>Betrag</th><th>Herkunft</th></tr></thead><tbody>'+FIN[v].map(x=>'<tr><td><span class="chip'+(x.art==='Einnahme'?' ok':'')+'">'+x.art+'</span></td><td>'+esc(x.p)+'</td><td>'+(x.art==='Ausgabe'?'– ':'')+eur(x.b)+'</td><td class="muted">'+esc(x.q)+'</td></tr>').join('')+
   '<tr><td colspan="2"><strong>Ergebnis</strong></td><td colspan="2"><strong>'+eur(e-a)+'</strong></td></tr></tbody></table></div>':'<p class="muted">Noch keine Einträge.</p>')+
-  '<form class="inline" data-form="fin" data-va="'+i+'"><label>Art<select id="fi-a-'+i+'"><option>Einnahme</option><option>Ausgabe</option></select></label><label class="grow">Posten<input id="fi-p-'+i+'" required placeholder="z. B. Theke, Eintritt, Miete, Honorar"></label><label>Betrag (€)<input id="fi-b-'+i+'" type="number" step="0.01" min="0" required></label><button>Eintragen</button></form></section>'});
+  '<form class="inline" data-form="fin" data-va="'+i+'"><label>Art<select id="fi-a-'+i+'"><option>Einnahme</option><option>Ausgabe</option></select></label><label class="grow">Posten<input id="fi-p-'+i+'" required placeholder="z. B. Theke, Eintritt, Miete, Honorar"></label><label>Betrag (€)<input id="fi-b-'+i+'" type="number" step="0.01" min="0" required></label><button>Eintragen</button></form></section>';
+  if(!/laufender/.test(v)){const k=KASSE[v];h+=(k&&k.fertig)||S.kasse===v?kasseHtml(v):'<p><button class="primary" data-act="kopen" data-va="'+i+'">Kasse abrechnen (Zählprotokoll)</button></p>'}});
  return h+'</div>'}
 function rechnungHtml(a){const r=a.rechnung;let sum=0;
  const rows=r.pos.map(p=>{const ep=PREIS[p.inv],s=ep!=null?ep*p.m:null;if(s!=null)sum+=s;return '<tr><td>'+esc(p.n)+'</td><td>'+p.m+'</td><td>'+(ep!=null?eur(ep):'<span class="chip warn">Preis fehlt</span>')+'</td><td>'+(s!=null?eur(s):'–')+'</td></tr>'}).join('');
  return '<section class="panel"><h3>Verbrauchsrechnung: '+esc(r.va)+'</h3><div class="scroll"><table><thead><tr><th>Posten</th><th>Menge</th><th>Preis je Stück</th><th>Summe</th></tr></thead><tbody>'+rows+
  '<tr><td colspan="3"><strong>Gesamt</strong></td><td><strong>'+eur(sum)+'</strong></td></tr></tbody></table></div><p class="muted" style="font-size:13px">Nur für Finanzen sichtbar. Die Preise kommen aus der geschützten Liste „Inventarwerte“.</p></section>'}
+function ergHtml(r){return '<p>Kasse nachher '+cent(r.e)+' − Wechselgeld vorher '+cent(r.a)+' + Barausgaben '+cent(r.aus)+'</p><p><strong>= Einnahmen '+cent(r.ein)+'</strong></p>'+(r.ein<0?'<p>Achtung: Nachher ist weniger Geld in der Kasse als vorher. Bitte noch einmal zählen und Barausgaben prüfen.</p>':'')}
+function kProtokoll(k,edit,i){const r=kCalc(k),inp=(w,c)=>'<input type="number" min="0" step="1" inputmode="numeric" style="width:70px;text-align:right" data-kz="'+w+'" data-c="'+c+'" data-va="'+i+'" value="'+(k[w][c]||'')+'" aria-label="'+stLbl(c)+(w==='a'?' vorher':' nachher')+', Stückzahl">';
+ return '<div class="scroll"><table><thead><tr><th>Schein / Münze</th><th>Vorher (Stück)</th><th>Vorher (€)</th><th>Nachher (Stück)</th><th>Nachher (€)</th></tr></thead><tbody>'+
+ STUECK.filter(c=>edit||k.a[c]||k.e[c]).map(c=>'<tr><td>'+stLbl(c)+'</td><td>'+(edit?inp('a',c):(k.a[c]||0))+'</td><td id="kz-a-'+c+'">'+cent(c*(+k.a[c]||0))+'</td><td>'+(edit?inp('e',c):(k.e[c]||0))+'</td><td id="kz-e-'+c+'">'+cent(c*(+k.e[c]||0))+'</td></tr>').join('')+
+ '<tr><td><strong>Summe</strong></td><td></td><td><strong id="kz-sa">'+cent(r.a)+'</strong></td><td></td><td><strong id="kz-se">'+cent(r.e)+'</strong></td></tr></tbody></table></div>'}
+function kasseHtml(v){if(!isMem('fi',S.me))return '<div class="box"><p>Die Kassenabrechnung sehen nur die Personen, die Finanzen machen.</p></div>';
+ const i=VERANST.indexOf(v),k=KASSE[v]||(KASSE[v]={a:{},e:{},aus:[],von:S.me,zweit:'',fertig:null}),r=kCalc(k);
+ if(k.fertig)return '<section class="panel"><h3>Kasse abgerechnet: '+esc(v)+'</h3><div class="box ok">'+ergHtml(r)+'</div><p class="muted" style="font-size:13px">Gezählt von '+esc(pn(k.fertig.von))+(k.fertig.zweit?' und '+esc(pn(k.fertig.zweit)):' (allein)')+' am '+esc(k.fertig.am)+'.</p>'+
+  '<details><summary>Zählprotokoll ansehen</summary>'+kProtokoll(k,false,i)+(k.aus.length?'<p><strong>Barausgaben aus der Kasse</strong></p><ul>'+k.aus.map(x=>'<li>'+esc(x.p)+': '+cent(x.c)+' (Beleg '+esc(x.beleg||'fehlt')+')</li>').join('')+'</ul>':'')+'</details></section>';
+ const opt=(sel,leer)=>(leer?'<option value="">niemand</option>':'')+P.map(p=>'<option value="'+p.id+'"'+(p.id===sel?' selected':'')+'>'+esc(p.name)+'</option>').join('');
+ return '<section class="panel" id="kasse"><h3>Kasse abrechnen: '+esc(v)+'</h3><p class="muted" style="font-size:13px">Zählprotokoll: <strong>Vorher</strong> ist das Wechselgeld, das mitgegeben wurde. <strong>Nachher</strong> ist alles, was am Ende in der Kasse ist. Am besten zu zweit zählen. Die App rechnet die Einnahmen aus.</p>'+
+ '<form data-form="kasse" data-va="'+i+'">'+kProtokoll(k,true,i)+
+ '<h4 style="margin:14px 0 4px">Barausgaben aus der Kasse</h4><p class="muted" style="font-size:13px;margin:0">Was während der Veranstaltung bar aus der Kasse bezahlt wurde, z. B. Eis oder Brötchen. Beleg in die Kasse legen.</p>'+
+ (k.aus.length?'<ul class="list">'+k.aus.map((x,j)=>'<li class="row" style="justify-content:space-between">'+esc(x.p)+': '+cent(x.c)+' <span class="muted">Beleg '+esc(x.beleg||'fehlt')+'</span><button type="button" class="small" data-act="kausdel" data-va="'+i+'" data-j="'+j+'">Entfernen</button></li>').join('')+'</ul>':'')+
+ '<div class="row" style="align-items:flex-end;margin-top:6px"><label class="grow">Wofür<input id="k-ap" placeholder="z. B. Eis an der Tankstelle"></label><label>Betrag (€)<input id="k-ab" type="number" step="0.01" min="0" style="width:110px"></label><label>Beleg-Nr.<input id="k-ag" style="width:100px" placeholder="z. B. 1"></label><button type="button" data-act="kaus" data-va="'+i+'">Barausgabe dazu</button></div>'+
+ '<div class="box ok" id="kz-erg" style="margin-top:12px">'+ergHtml(r)+'</div>'+
+ '<div class="row" style="align-items:flex-end;margin-top:10px"><label>Gezählt von<select data-act="kvon" data-va="'+i+'">'+opt(k.von)+'</select></label><label>Zweite Person<select data-act="kzweit" data-va="'+i+'">'+opt(k.zweit,1)+'</select></label><button type="button" class="primary" data-act="kfertig" data-va="'+i+'">Abrechnung abschließen</button></div>'+
+ '<p class="muted" style="font-size:13px">Beim Abschließen kommen die Einnahmen und jede Barausgabe in die Übersicht. Eine geschätzte Einnahme wird dabei ersetzt.</p></form></section>'}
+function kFertig(i){const v=VERANST[i],k=KASSE[v],r=kCalc(k);
+ if(r.e<=0){toast('Bitte erst zählen: Nachher ist noch leer.');return}
+ if(k.zweit&&k.zweit===k.von){toast('Die zweite Person muss eine andere sein.');return}
+ k.fertig={von:k.von,zweit:k.zweit,am:now()};const wer=pn(k.von)+(k.zweit?' und '+pn(k.zweit):'');
+ const vorher=FIN[v].length;FIN[v]=FIN[v].filter(x=>!(x.art==='Einnahme'&&/Schätzung/.test(x.p)));const ersetzt=vorher-FIN[v].length;
+ FIN[v].push({art:'Einnahme',p:'Kasse laut Zählprotokoll',b:r.ein/100,q:'Kassenabrechnung, gezählt von '+wer});
+ k.aus.forEach(x=>FIN[v].push({art:'Ausgabe',p:x.p+' (bar aus der Kasse)',b:x.c/100,q:'Beleg '+(x.beleg||'fehlt')}));
+ A.filter(t=>t.kasse&&t.kasse.va===v&&open(t)).forEach(t=>{t.fs='erledigt';logA(t,'Kasse abgerechnet: Einnahmen '+cent(r.ein))});
+ S.kasse=null;toast('Abgerechnet. Einnahmen '+cent(r.ein)+(ersetzt?' (Schätzung ersetzt)':'')+'.');render()}
 
 function render(){let v;
  if(!S.me)v=vLogin();
@@ -613,6 +660,11 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
   const betrag=pos.reduce((s,b)=>s+(PREIS[b.inv]!=null?PREIS[b.inv]*b.m:0),0);FIN[v].push({art:'Ausgabe',p:'Verbrauchsmaterial ('+pos.map(b=>b.m+' × '+b.n).join(', ')+')',b:Math.round(betrag*100)/100,q:'Verbrauchsrechnung, von selbst'});
   logA(t,'Verbrauch gemeldet von '+pn(S.me));toast('An Finanzen gemeldet: '+pos.length+' Posten.');render()}
  else if(act==='invdel'){S.invDel=S.invDel===+d.x?null:+d.x;render()}
+ else if(act==='kopen'){const v=VERANST[+d.va];S.kasse=S.kasse===v?null:v;render()}
+ else if(act==='kaus'){const k=KASSE[VERANST[+d.va]],p=(document.getElementById('k-ap').value||'').trim(),c=Math.round((+document.getElementById('k-ab').value||0)*100);
+  if(!p||c<=0){toast('Bitte eintragen, wofür und wie viel.');return}k.aus.push({p,c,beleg:(document.getElementById('k-ag').value||'').trim()});render()}
+ else if(act==='kausdel'){KASSE[VERANST[+d.va]].aus.splice(+d.j,1);render()}
+ else if(act==='kfertig')kFertig(+d.va);
  else if(act==='ekdel'){const i=EK.findIndex(x=>x.id===+d.e);const e=EK[i];EK.splice(i,1);toast('Gelöscht: '+e.n);render()}
  else if(act==='ekok'){const i=EK.findIndex(x=>x.id===+d.e);const e=EK[i];EK.splice(i,1);
   if(e.quelle==='Inventar'){const x=INV.find(y=>y.n===e.n);if(x)x.m+=e.m;else INV.push({id:invId++,n:e.n,m:e.m,o:e.o||'noch festlegen',res:[]});toast('Gekauft. '+e.n+' ist wieder im Inventar.')}else toast('Gekauft: '+e.n);render()}
@@ -634,7 +686,11 @@ document.addEventListener('change',e=>{const el=e.target,d=el.dataset,a=S.a&&A.f
  else if(d.act==='ks'&&a){a.ks=el.value==='–'?'':el.value;logA(a,'Kostenstelle: '+el.value);toast('Kostenstelle gespeichert.');render()}
  else if(d.act==='pack'&&a){a.pack[+d.i].ok=el.checked;render()}
  else if(d.act==='cal'){S.cals[d.c]=el.checked?1:0;render()}
+ else if(d.act==='kvon'||d.act==='kzweit'){KASSE[VERANST[+d.va]][d.act==='kvon'?'von':'zweit']=el.value}
 });
+document.addEventListener('input',e=>{const el=e.target,d=el.dataset;if(!d.kz)return;
+ const k=KASSE[VERANST[+d.va]];k[d.kz][d.c]=Math.max(0,Math.floor(+el.value||0));const r=kCalc(k),set=(id,t)=>{const x=document.getElementById(id);if(x)x.innerHTML=t};
+ set('kz-'+d.kz+'-'+d.c,cent(d.c*k[d.kz][d.c]));set('kz-sa',cent(r.a));set('kz-se',cent(r.e));set('kz-erg',ergHtml(r))});
 document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.dataset,a=S.a&&A.find(x=>x.id===S.a),val=id=>(document.getElementById(id)||{}).value;
  if(d.form==='kommentar'){const t=val('km').trim();if(!t)return;a.k.push({p:S.me,t,am:now()});
   if(a.fn&&!a.fg&&S.fv==='kommentar'&&/^Freigegeben:/i.test(t)){a.fg={von:S.me,am:now(),art:'kommentar'};logA(a,'Freigegeben (Kommentar)');toast('Als Freigabe übernommen.')}render()}
@@ -643,6 +699,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.d
   if(x.mb){if(g==='verbraucht'){const va=val('id-va');VB.push({inv:x.id,n:x.n,m:n,va,von:S.me,am:'19.11.',gemeldet:false});msg+=' für „'+va+'“'}if(x.m<x.mb&&!EK.some(e=>e.n===x.n)){EK.push({id:ekId++,n:x.n,m:x.mb-x.m,grund:'unter Mindestbestand ('+x.m+' da, mindestens '+x.mb+')',quelle:'Inventar',o:x.o,von:S.me,am:'19.11.'});msg+='. Bestand unter Minimum, steht jetzt auf der Einkaufsliste.'}else msg+='.'}
   else{if(x.m<=0)INV.splice(INV.indexOf(x),1);if(ek){EK.push({id:ekId++,n:x.n,m:n,grund:g,quelle:'Inventar',o:x.o,von:S.me,am:'19.11.'});msg+=', steht auf der Einkaufsliste.'}else msg+='.'}
   S.invDel=null;toast(msg);render()}
+ else if(d.form==='kasse'){/* Enter in einem Zählfeld schließt nicht ab, nur der Knopf */}
  else if(d.form==='fin'){const i=+d.va,v=VERANST[i];FIN[v].push({art:val('fi-a-'+i),p:val('fi-p-'+i),b:Math.round((+val('fi-b-'+i)||0)*100)/100,q:'eingetragen von '+pn(S.me)});toast('Eingetragen.');render()}
  else if(d.form==='invneu'){INV.push({id:invId++,mb:+val('in-mb')||0,k:val('in-k'),n:val('in-n'),m:Math.max(1,+val('in-m')||1),o:val('in-o')||'noch festlegen',res:[]});toast('Ins Inventar aufgenommen.');render()}
  else if(d.form==='ekneu'){EK.push({id:ekId++,n:val('ek-n'),m:Math.max(1,+val('ek-m')||1),grund:'gebraucht',quelle:'eingetragen',o:'',von:S.me,am:'19.11.'});toast('Steht auf der Einkaufsliste.');render()}
