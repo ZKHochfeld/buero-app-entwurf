@@ -159,6 +159,9 @@ T({t:'Lesung am 27.11.: Stühle stellen',b:'va',art:'Einsatz',p:'jona',z:'angefr
 T({t:'Lesung am 27.11.: Tontechnik',b:'va',art:'Einsatz',datum:'2026-11-27',von:'17:30',bis:'20:30',frist:'2026-11-27',fach:'Ton',notiz:'Im Team kann niemand die Tontechnik übernehmen. Bitte extern anfragen.'});
 const rid=T({t:'Lesung am 27.11.: Tech-Rider prüfen',b:'va',frist:'2026-11-23',ks:'Eigenveranstaltung',notiz:'Von selbst angelegt: Mail an kontakt@ mit Anhang „TechRider_Lesung.pdf“ am 18.11. um 21:14. Die Datei liegt im Ordner Tech-Rider › 2026-11-27 Lesung.',rider:{datei:'TechRider_Lesung.pdf',von:'booking@example.org',ki:false,ok:false}});
 rid.log=[{p:'auto',t:'Aus E-Mail angelegt, Anhang abgelegt',am:'18.11., 21:14'}];
+T({t:'Kiezabend 22.11. (mit Band): bei der GEMA anmelden',b:'va',p:'mira',frist:'2026-11-21',ks:'Eigenveranstaltung',notiz:'Vor der Veranstaltung im GEMA Onlineportal anmelden. Die Rechnung der GEMA geht danach an Finanzen.'});
+T({t:'Kiezabend 22.11.: Setlist von der Band anfordern',b:'va',p:'mira',frist:'2026-11-22',fs:'arbeit',notiz:'Vorlage „E-Mail an die Band“ nutzen. Die Band gibt uns immer eine Setlist, auch bei GEMA-freier Musik. Mit der Band ist vereinbart: Wir kassieren, die Band bekommt den Eintritt gegen Quittung.'});
+T({t:'Kiezabend 22.11.: Setlist bei der GEMA einreichen',b:'va',frist:'2027-01-03',notiz:'Spätestens 6 Wochen nach der Veranstaltung im GEMA Onlineportal unter „Meine Setlists“. Oder dort den Link per E-Mail an die Band weiterleiten, dann reicht die Band selbst ein.'});
 T({t:'Getränke für Dezember bestellen',b:'bg',art:'Einkauf',p:'sam',frist:'2026-11-24'});
 T({t:'Theke beim Kiezabend',b:'bg',art:'Theke',datum:'2026-11-22',von:'18:00',bis:'22:00',frist:'2026-11-22'});
 T({t:'Barkasse November abrechnen',b:'fi',p:'alex',frist:'2026-11-30'});
@@ -260,7 +263,18 @@ const VL=[
   ['Schritt','Freigabe einholen','deniz'],
   ['Schritt','Schlüsselübergabe vereinbaren','mira'],
   ['Schritt','Nach der Veranstaltung: Raum abnehmen','mira'],
-  ['Tipp','Ende der Veranstaltung und Lautstärke früh klären.','mira']]}
+  ['Tipp','Ende der Veranstaltung und Lautstärke früh klären.','mira']]},
+ {id:3,b:'va',name:'Konzert mit Band (GEMA)',items:[
+  ['Schritt','Mit der Band klären: Gage, Eintritt (wer kassiert, wer bekommt ihn), Setlist','mira'],
+  ['Schritt','Bei der GEMA anmelden (vor der Veranstaltung, je früher desto besser)','mira'],
+  ['Schritt','Setlist von der Band anfordern (Vorlage „E-Mail an die Band“)','mira'],
+  ['Schritt','Setlist bei der GEMA einreichen, spätestens 6 Wochen danach','mira'],
+  ['Schritt','GEMA-Rechnung an Finanzen weitergeben','mira'],
+  ['Schritt','Bekommt die Band den Eintritt: Quittung der Band an Finanzen','mira'],
+  ['Anforderung','Spielt die Band nur GEMA-freie Musik? Trotzdem anmelden und Setlist einreichen, Haken „als GEMA frei melden“.','mira'],
+  ['Anforderung','Ohne Livemusik und ohne Musik vom Band: keine GEMA nötig. Im Zweifel nachfragen.','mira'],
+  ['Tipp','Mehrere Bands: für jede Band eine eigene Setlist.','mira'],
+  ['Tipp','Spielen die Musiker ohne Gage, gibt es bei der GEMA eventuell 10 % Benefiznachlass. Danach fragen.','mira']]}
 ].map(v=>({id:v.id,b:v.b,name:v.name,items:v.items.map(i=>({typ:i[0],t:i[1],von:i[2]}))}));
 
 const TAGE=['Mo','Di','Mi','Do','Fr','Sa','So'];
@@ -297,7 +311,7 @@ const STUECK=[20000,10000,5000,2000,1000,500,200,100,50,20,10,5,2,1];
 const cent=c=>eur(c/100);
 const stLbl=c=>c>=500?(c/100)+' € (Schein)':c>=100?(c/100)+' € (Münze)':c+' Cent';
 function kSum(o){return STUECK.reduce((s,c)=>s+c*(+o[c]||0),0)}
-function kCalc(k){const a=kSum(k.a),e=kSum(k.e),aus=k.aus.reduce((s,x)=>s+x.c,0);return {a,e,aus,ein:e-a+aus}}
+function kCalc(k){const a=kSum(k.a),e=kSum(k.e),aus=k.aus.reduce((s,x)=>s+x.c,0),karte=k.karte||0;return {a,e,aus,karte,ein:e-a+aus,ges:e-a+aus+karte}}
 // Nach jeder Veranstaltung: Übersicht bei Finanzen und Aufgabe „Kasse abrechnen“ von selbst anlegen
 function vaName(e){const dt=new Date(e.d+'T12:00:00');return e.t+' ('+TAGE[(dt.getDay()+6)%7]+' '+e.d.slice(8)+'.'+e.d.slice(5,7)+'.)'}
 function nachVeranstaltung(){E.filter(e=>e.cal==='va'&&e.d<HEUTE).forEach(e=>{const v=vaName(e);if(VERANST.includes(v))return;
@@ -592,8 +606,9 @@ function vFinanzen(){if(!isMem('fi',S.me))return '<div class="wrap"><h1>Finanzen
  let h='<div class="wrap"><h1>Einnahmen und Ausgaben</h1><p class="sub">Je Veranstaltung, auch Foodtruck. Nur für Finanzen sichtbar. Ist eine Veranstaltung vorbei, legt die App ihre Übersicht und die Aufgabe „Kasse abrechnen“ von selbst an (im Entwurf: Soli-Café am 15.11.). Verbrauchsrechnungen und die Kassenabrechnung kommen von selbst dazu. Alle Zahlen im Entwurf sind erfunden.</p>';
  h+='<section class="panel scroll"><table><thead><tr><th>Veranstaltung</th><th>Einnahmen</th><th>Ausgaben</th><th>Ergebnis</th></tr></thead><tbody>'+VERANST.map(v=>{const e=sum(v,'Einnahme'),a=sum(v,'Ausgabe'),r=e-a;return '<tr><td>'+esc(v)+'</td><td>'+eur(e)+'</td><td>'+eur(a)+'</td><td><span class="chip'+(r>=0?' ok':' crit')+'">'+eur(r)+'</span></td></tr>'}).join('')+'</tbody></table></section>';
  VERANST.forEach((v,i)=>{const e=sum(v,'Einnahme'),a=sum(v,'Ausgabe');
-  h+='<h2>'+esc(v)+'</h2><section class="panel">'+(FIN[v].length?'<div class="scroll"><table><thead><tr><th>Art</th><th>Posten</th><th>Betrag</th><th>Herkunft</th></tr></thead><tbody>'+FIN[v].map(x=>'<tr><td><span class="chip'+(x.art==='Einnahme'?' ok':'')+'">'+x.art+'</span></td><td>'+esc(x.p)+'</td><td>'+(x.art==='Ausgabe'?'– ':'')+eur(x.b)+'</td><td class="muted">'+esc(x.q)+'</td></tr>').join('')+
-  '<tr><td colspan="2"><strong>Ergebnis</strong></td><td colspan="2"><strong>'+eur(e-a)+'</strong></td></tr></tbody></table></div>':'<p class="muted">Noch keine Einträge.</p>')+
+  h+='<h2>'+esc(v)+'</h2><section class="panel">'+(FIN[v].length?'<div class="scroll"><table><thead><tr><th>Art</th><th>Posten</th><th>MwSt</th><th>Betrag</th><th>Herkunft</th></tr></thead><tbody>'+FIN[v].map(x=>'<tr><td><span class="chip'+(x.art==='Einnahme'?' ok':'')+'">'+x.art+'</span></td><td>'+esc(x.p)+'</td><td>'+esc(x.mw||'')+'</td><td>'+(x.art==='Ausgabe'?'– ':'')+eur(x.b)+'</td><td class="muted">'+esc(x.q)+(x.pp==='offen'?' <span class="chip warn">Auszahlung offen</span>':'')+'</td></tr>').join('')+
+  '<tr><td colspan="3"><strong>Ergebnis</strong></td><td colspan="2"><strong>'+eur(e-a)+'</strong></td></tr></tbody></table></div>':'<p class="muted">Noch keine Einträge.</p>')+
+  (FIN[v].some(x=>x.pp==='offen')?'<div class="row" style="align-items:flex-end;margin-top:10px"><label>PayPal-Auszahlung angekommen? Gebühren (€)<input id="pp-'+i+'" type="number" step="0.01" min="0" style="width:120px" placeholder="laut Auszug"></label><button data-act="ppok" data-va="'+i+'">Abhaken</button></div>':'')+
   '<form class="inline" data-form="fin" data-va="'+i+'"><label>Art<select id="fi-a-'+i+'"><option>Einnahme</option><option>Ausgabe</option></select></label><label class="grow">Posten<input id="fi-p-'+i+'" required placeholder="z. B. Theke, Eintritt, Miete, Honorar"></label><label>Betrag (€)<input id="fi-b-'+i+'" type="number" step="0.01" min="0" required></label><button>Eintragen</button></form></section>';
   if(!/laufender/.test(v)){const k=KASSE[v];h+=(k&&k.fertig)||S.kasse===v?kasseHtml(v):'<p><button class="primary" data-act="kopen" data-va="'+i+'">Kasse abrechnen (Zählprotokoll)</button></p>'}});
  return h+'</div>'}
@@ -601,33 +616,51 @@ function rechnungHtml(a){const r=a.rechnung;let sum=0;
  const rows=r.pos.map(p=>{const ep=PREIS[p.inv],s=ep!=null?ep*p.m:null;if(s!=null)sum+=s;return '<tr><td>'+esc(p.n)+'</td><td>'+p.m+'</td><td>'+(ep!=null?eur(ep):'<span class="chip warn">Preis fehlt</span>')+'</td><td>'+(s!=null?eur(s):'–')+'</td></tr>'}).join('');
  return '<section class="panel"><h3>Verbrauchsrechnung: '+esc(r.va)+'</h3><div class="scroll"><table><thead><tr><th>Posten</th><th>Menge</th><th>Preis je Stück</th><th>Summe</th></tr></thead><tbody>'+rows+
  '<tr><td colspan="3"><strong>Gesamt</strong></td><td><strong>'+eur(sum)+'</strong></td></tr></tbody></table></div><p class="muted" style="font-size:13px">Nur für Finanzen sichtbar. Die Preise kommen aus der geschützten Liste „Inventarwerte“.</p></section>'}
-function ergHtml(r){return '<p>Kasse nachher '+cent(r.e)+' − Wechselgeld vorher '+cent(r.a)+' + Barausgaben '+cent(r.aus)+'</p><p><strong>= Einnahmen '+cent(r.ein)+'</strong></p>'+(r.ein<0?'<p>Achtung: Nachher ist weniger Geld in der Kasse als vorher. Bitte noch einmal zählen und Barausgaben prüfen.</p>':'')}
-function kProtokoll(k,edit,i){const r=kCalc(k),inp=(w,c)=>'<input type="number" min="0" step="1" inputmode="numeric" style="width:70px;text-align:right" data-kz="'+w+'" data-c="'+c+'" data-va="'+i+'" value="'+(k[w][c]||'')+'" aria-label="'+stLbl(c)+(w==='a'?' vorher':' nachher')+', Stückzahl">';
+const KS2={abend:'Abendkasse (Eintritt)',theke:'Thekenkasse (Getränke)'};
+const POS2={abend:'Eintritt',theke:'Getränke'};
+const MWST=['','19 %','7 %','steuerfrei'];
+const MODUS={verein:'Eintritt bleibt beim Verein',band_aus:'Wir kassieren, die Band bekommt den Eintritt (Quittung)',band_selbst:'Die Band kassiert selbst (keine Abendkasse)'};
+function kAktiv(k){return k.modus==='band_selbst'?['theke']:['abend','theke']}
+function kAlle(k){const r={};let ges=0;kAktiv(k).forEach(s=>{r[s]=kCalc(k[s]);ges+=r[s].ges});r.ges=ges;return r}
+function ergHtml(r,s){return '<p>Kasse nachher '+cent(r.e)+' − Wechselgeld vorher '+cent(r.a)+' + Barausgaben '+cent(r.aus)+' = <strong>bar '+cent(r.ein)+'</strong></p><p>+ Karte (PayPal POS) '+cent(r.karte)+' = <strong>'+POS2[s]+' gesamt '+cent(r.ges)+'</strong></p>'+(r.ein<0?'<p>Achtung: Nachher ist weniger Geld in der Kasse als vorher. Bitte noch einmal zählen und Barausgaben prüfen.</p>':'')}
+function kProtokoll(kk,edit,i,s){const r=kCalc(kk),inp=(w,c)=>'<input type="number" min="0" step="1" inputmode="numeric" style="width:70px;text-align:right" data-kz="'+w+'" data-ks="'+s+'" data-c="'+c+'" data-va="'+i+'" value="'+(kk[w][c]||'')+'" aria-label="'+KS2[s]+', '+stLbl(c)+(w==='a'?' vorher':' nachher')+', Stückzahl">';
  return '<div class="scroll"><table><thead><tr><th>Schein / Münze</th><th>Vorher (Stück)</th><th>Vorher (€)</th><th>Nachher (Stück)</th><th>Nachher (€)</th></tr></thead><tbody>'+
- STUECK.filter(c=>edit||k.a[c]||k.e[c]).map(c=>'<tr><td>'+stLbl(c)+'</td><td>'+(edit?inp('a',c):(k.a[c]||0))+'</td><td id="kz-a-'+c+'">'+cent(c*(+k.a[c]||0))+'</td><td>'+(edit?inp('e',c):(k.e[c]||0))+'</td><td id="kz-e-'+c+'">'+cent(c*(+k.e[c]||0))+'</td></tr>').join('')+
- '<tr><td><strong>Summe</strong></td><td></td><td><strong id="kz-sa">'+cent(r.a)+'</strong></td><td></td><td><strong id="kz-se">'+cent(r.e)+'</strong></td></tr></tbody></table></div>'}
+ STUECK.filter(c=>edit||kk.a[c]||kk.e[c]).map(c=>'<tr><td>'+stLbl(c)+'</td><td>'+(edit?inp('a',c):(kk.a[c]||0))+'</td><td id="kz-'+s+'-a-'+c+'">'+cent(c*(+kk.a[c]||0))+'</td><td>'+(edit?inp('e',c):(kk.e[c]||0))+'</td><td id="kz-'+s+'-e-'+c+'">'+cent(c*(+kk.e[c]||0))+'</td></tr>').join('')+
+ '<tr><td><strong>Summe</strong></td><td></td><td><strong id="kz-'+s+'-sa">'+cent(r.a)+'</strong></td><td></td><td><strong id="kz-'+s+'-se">'+cent(r.e)+'</strong></td></tr></tbody></table></div>'}
+function kTeil(k,s,i){const kk=k[s],r=kCalc(kk);
+ return '<div class="panel" style="margin-top:12px"><h4 style="margin:0 0 4px">'+KS2[s]+'</h4>'+
+ '<label style="max-width:220px">Mehrwertsteuer '+POS2[s]+'<select data-act="kmw" data-ks="'+s+'" data-va="'+i+'">'+MWST.map(m=>'<option value="'+m+'"'+(m===k.mw[s]?' selected':'')+'>'+(m||'bitte wählen')+'</option>').join('')+'</select></label>'+
+ '<p class="muted" style="font-size:13px;margin:8px 0 4px">Zählprotokoll: <strong>Vorher</strong> ist das Wechselgeld. <strong>Nachher</strong> ist alles, was am Ende in der Kasse ist'+(s==='abend'&&k.modus==='band_aus'?', gezählt bevor die Band ihren Anteil bekommt':'')+'.</p>'+kProtokoll(kk,true,i,s)+
+ '<p style="margin:10px 0 2px"><strong>Barausgaben aus dieser Kasse</strong> <span class="muted" style="font-size:13px">(Beleg in die Kasse legen)</span></p>'+
+ (kk.aus.length?'<ul class="list">'+kk.aus.map((x,j)=>'<li class="row" style="justify-content:space-between">'+esc(x.p)+': '+cent(x.c)+' <span class="muted">Beleg '+esc(x.beleg||'fehlt')+'</span><button type="button" class="small" data-act="kausdel" data-ks="'+s+'" data-va="'+i+'" data-j="'+j+'">Entfernen</button></li>').join('')+'</ul>':'')+
+ '<div class="row" style="align-items:flex-end"><label class="grow">Wofür<input id="k-'+s+'-ap" placeholder="z. B. Eis an der Tankstelle"></label><label>Betrag (€)<input id="k-'+s+'-ab" type="number" step="0.01" min="0" style="width:110px"></label><label>Beleg-Nr.<input id="k-'+s+'-ag" style="width:100px" placeholder="z. B. 1"></label><button type="button" data-act="kaus" data-ks="'+s+'" data-va="'+i+'">Barausgabe dazu</button></div>'+
+ '<label style="margin-top:10px;max-width:320px">Kartenzahlungen laut PayPal POS (€)<input type="number" step="0.01" min="0" data-kk="karte" data-ks="'+s+'" data-va="'+i+'" value="'+(kk.karte?kk.karte/100:'')+'" placeholder="aus dem Tagesbericht"></label>'+
+ '<p class="muted" style="font-size:13px;margin:4px 0 0">Den Tagesbericht aus PayPal POS als PDF in die Aufgabe hängen. Nur den Kartenanteil eintragen, damit Bargeld nicht doppelt zählt.</p>'+
+ '<div class="box ok" id="kz-'+s+'-erg" style="margin-top:10px">'+ergHtml(r,s)+'</div></div>'}
 function kasseHtml(v){if(!isMem('fi',S.me))return '<div class="box"><p>Die Kassenabrechnung sehen nur die Personen, die Finanzen machen.</p></div>';
- const i=VERANST.indexOf(v),k=KASSE[v]||(KASSE[v]={a:{},e:{},aus:[],von:S.me,zweit:'',fertig:null}),r=kCalc(k);
- if(k.fertig)return '<section class="panel"><h3>Kasse abgerechnet: '+esc(v)+'</h3><div class="box ok">'+ergHtml(r)+'</div><p class="muted" style="font-size:13px">Gezählt von '+esc(pn(k.fertig.von))+(k.fertig.zweit?' und '+esc(pn(k.fertig.zweit)):' (allein)')+' am '+esc(k.fertig.am)+'.</p>'+
-  '<details><summary>Zählprotokoll ansehen</summary>'+kProtokoll(k,false,i)+(k.aus.length?'<p><strong>Barausgaben aus der Kasse</strong></p><ul>'+k.aus.map(x=>'<li>'+esc(x.p)+': '+cent(x.c)+' (Beleg '+esc(x.beleg||'fehlt')+')</li>').join('')+'</ul>':'')+'</details></section>';
+ const i=VERANST.indexOf(v),neu=()=>({a:{},e:{},aus:[],karte:0}),k=KASSE[v]||(KASSE[v]={abend:neu(),theke:neu(),modus:'verein',mw:{abend:'',theke:'19 %'},von:S.me,zweit:'',fertig:null});
+ if(k.fertig){const r=kAlle(k);return '<section class="panel"><h3>Kasse abgerechnet: '+esc(v)+'</h3><p>'+esc(MODUS[k.modus])+'.</p>'+kAktiv(k).map(s=>'<div class="box ok" style="margin-top:8px"><p><strong>'+KS2[s]+'</strong> (Mehrwertsteuer '+esc(k.mw[s]||'nicht gewählt')+')</p>'+ergHtml(r[s],s)+'</div>').join('')+
+  '<p class="muted" style="font-size:13px">Gezählt von '+esc(pn(k.fertig.von))+(k.fertig.zweit?' und '+esc(pn(k.fertig.zweit)):' (allein)')+' am '+esc(k.fertig.am)+'.</p>'+
+  kAktiv(k).map(s=>'<details><summary>Zählprotokoll '+KS2[s]+'</summary>'+kProtokoll(k[s],false,i,s)+(k[s].aus.length?'<ul>'+k[s].aus.map(x=>'<li>'+esc(x.p)+': '+cent(x.c)+' (Beleg '+esc(x.beleg||'fehlt')+')</li>').join('')+'</ul>':'')+'</details>').join('')+'</section>'}
  const opt=(sel,leer)=>(leer?'<option value="">niemand</option>':'')+P.map(p=>'<option value="'+p.id+'"'+(p.id===sel?' selected':'')+'>'+esc(p.name)+'</option>').join('');
- return '<section class="panel" id="kasse"><h3>Kasse abrechnen: '+esc(v)+'</h3><p class="muted" style="font-size:13px">Zählprotokoll: <strong>Vorher</strong> ist das Wechselgeld, das mitgegeben wurde. <strong>Nachher</strong> ist alles, was am Ende in der Kasse ist. Am besten zu zweit zählen. Die App rechnet die Einnahmen aus.</p>'+
- '<form data-form="kasse" data-va="'+i+'">'+kProtokoll(k,true,i)+
- '<h4 style="margin:14px 0 4px">Barausgaben aus der Kasse</h4><p class="muted" style="font-size:13px;margin:0">Was während der Veranstaltung bar aus der Kasse bezahlt wurde, z. B. Eis oder Brötchen. Beleg in die Kasse legen.</p>'+
- (k.aus.length?'<ul class="list">'+k.aus.map((x,j)=>'<li class="row" style="justify-content:space-between">'+esc(x.p)+': '+cent(x.c)+' <span class="muted">Beleg '+esc(x.beleg||'fehlt')+'</span><button type="button" class="small" data-act="kausdel" data-va="'+i+'" data-j="'+j+'">Entfernen</button></li>').join('')+'</ul>':'')+
- '<div class="row" style="align-items:flex-end;margin-top:6px"><label class="grow">Wofür<input id="k-ap" placeholder="z. B. Eis an der Tankstelle"></label><label>Betrag (€)<input id="k-ab" type="number" step="0.01" min="0" style="width:110px"></label><label>Beleg-Nr.<input id="k-ag" style="width:100px" placeholder="z. B. 1"></label><button type="button" data-act="kaus" data-va="'+i+'">Barausgabe dazu</button></div>'+
- '<div class="box ok" id="kz-erg" style="margin-top:12px">'+ergHtml(r)+'</div>'+
- '<div class="row" style="align-items:flex-end;margin-top:10px"><label>Gezählt von<select data-act="kvon" data-va="'+i+'">'+opt(k.von)+'</select></label><label>Zweite Person<select data-act="kzweit" data-va="'+i+'">'+opt(k.zweit,1)+'</select></label><button type="button" class="primary" data-act="kfertig" data-va="'+i+'">Abrechnung abschließen</button></div>'+
- '<p class="muted" style="font-size:13px">Beim Abschließen kommen die Einnahmen und jede Barausgabe in die Übersicht. Eine geschätzte Einnahme wird dabei ersetzt.</p></form></section>'}
-function kFertig(i){const v=VERANST[i],k=KASSE[v],r=kCalc(k);
- if(r.e<=0){toast('Bitte erst zählen: Nachher ist noch leer.');return}
+ return '<section class="panel" id="kasse"><h3>Kasse abrechnen: '+esc(v)+'</h3><p class="muted" style="font-size:13px">Zwei Kassen: Abendkasse für den Eintritt, Thekenkasse für Getränke. Je Kasse ein Zählprotokoll, dazu die Kartenzahlungen aus PayPal POS. Die App rechnet die Einnahmen aus. Am besten zu zweit zählen.</p>'+
+ '<form data-form="kasse" data-va="'+i+'"><label style="max-width:520px">Eintritt bei dieser Veranstaltung<select data-act="kmodus" data-va="'+i+'">'+Object.keys(MODUS).map(m=>'<option value="'+m+'"'+(m===k.modus?' selected':'')+'>'+MODUS[m]+'</option>').join('')+'</select></label>'+
+ kAktiv(k).map(s=>kTeil(k,s,i)).join('')+
+ '<div class="row" style="align-items:flex-end;margin-top:12px"><label>Gezählt von<select data-act="kvon" data-va="'+i+'">'+opt(k.von)+'</select></label><label>Zweite Person<select data-act="kzweit" data-va="'+i+'">'+opt(k.zweit,1)+'</select></label><button type="button" class="primary" data-act="kfertig" data-va="'+i+'">Abrechnung abschließen</button></div>'+
+ '<p class="muted" style="font-size:13px">Beim Abschließen kommen die Einnahmen getrennt nach Eintritt und Getränke, bar und Karte, mit Mehrwertsteuersatz in die Übersicht, dazu jede Barausgabe. Eine geschätzte Einnahme wird ersetzt. Bekommt die Band den Eintritt, steht die Auszahlung an die Band als Ausgabe darin.</p></form></section>'}
+function kFertig(i){const v=VERANST[i],k=KASSE[v],r=kAlle(k),akt=kAktiv(k);
+ if(!akt.some(s=>r[s].e>0||r[s].karte>0)){toast('Bitte erst zählen: Nachher ist noch leer.');return}
+ const ohneSatz=akt.filter(s=>r[s].ges!==0&&!k.mw[s]);if(ohneSatz.length){toast('Bitte den Mehrwertsteuersatz wählen: '+ohneSatz.map(s=>POS2[s]).join(', ')+'.');return}
  if(k.zweit&&k.zweit===k.von){toast('Die zweite Person muss eine andere sein.');return}
  k.fertig={von:k.von,zweit:k.zweit,am:now()};const wer=pn(k.von)+(k.zweit?' und '+pn(k.zweit):'');
  const vorher=FIN[v].length;FIN[v]=FIN[v].filter(x=>!(x.art==='Einnahme'&&/Schätzung/.test(x.p)));const ersetzt=vorher-FIN[v].length;
- FIN[v].push({art:'Einnahme',p:'Kasse laut Zählprotokoll',b:r.ein/100,q:'Kassenabrechnung, gezählt von '+wer});
- k.aus.forEach(x=>FIN[v].push({art:'Ausgabe',p:x.p+' (bar aus der Kasse)',b:x.c/100,q:'Beleg '+(x.beleg||'fehlt')}));
- A.filter(t=>t.kasse&&t.kasse.va===v&&open(t)).forEach(t=>{t.fs='erledigt';logA(t,'Kasse abgerechnet: Einnahmen '+cent(r.ein))});
- S.kasse=null;toast('Abgerechnet. Einnahmen '+cent(r.ein)+(ersetzt?' (Schätzung ersetzt)':'')+'.');render()}
+ akt.forEach(s=>{const x=r[s],mw=k.mw[s];
+  if(x.ein)FIN[v].push({art:'Einnahme',p:POS2[s]+' bar',b:x.ein/100,mw,q:'Zählprotokoll, gezählt von '+wer});
+  if(x.karte)FIN[v].push({art:'Einnahme',p:POS2[s]+' Karte (PayPal POS)',b:x.karte/100,mw,q:'Tagesbericht PayPal POS',pp:'offen'});
+  k[s].aus.forEach(a=>FIN[v].push({art:'Ausgabe',p:a.p+' (bar aus der '+KS2[s].split(' ')[0]+')',b:a.c/100,q:'Beleg '+(a.beleg||'fehlt')}))});
+ if(k.modus==='band_aus'&&r.abend.ges)FIN[v].push({art:'Ausgabe',p:'Eintritt an die Band ausgezahlt',b:r.abend.ges/100,q:'Quittung der Band'});
+ A.filter(t=>t.kasse&&t.kasse.va===v&&open(t)).forEach(t=>{t.fs='erledigt';logA(t,'Kasse abgerechnet: Einnahmen '+cent(r.ges))});
+ S.kasse=null;toast('Abgerechnet. Einnahmen '+cent(r.ges)+(ersetzt?' (Schätzung ersetzt)':'')+'.');render()}
 
 function render(){let v;
  if(!S.me)v=vLogin();
@@ -661,9 +694,11 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
   logA(t,'Verbrauch gemeldet von '+pn(S.me));toast('An Finanzen gemeldet: '+pos.length+' Posten.');render()}
  else if(act==='invdel'){S.invDel=S.invDel===+d.x?null:+d.x;render()}
  else if(act==='kopen'){const v=VERANST[+d.va];S.kasse=S.kasse===v?null:v;render()}
- else if(act==='kaus'){const k=KASSE[VERANST[+d.va]],p=(document.getElementById('k-ap').value||'').trim(),c=Math.round((+document.getElementById('k-ab').value||0)*100);
-  if(!p||c<=0){toast('Bitte eintragen, wofür und wie viel.');return}k.aus.push({p,c,beleg:(document.getElementById('k-ag').value||'').trim()});render()}
- else if(act==='kausdel'){KASSE[VERANST[+d.va]].aus.splice(+d.j,1);render()}
+ else if(act==='kaus'){const kk=KASSE[VERANST[+d.va]][d.ks],g=id=>(document.getElementById('k-'+d.ks+'-'+id).value||'').trim(),p=g('ap'),c=Math.round((+g('ab')||0)*100);
+  if(!p||c<=0){toast('Bitte eintragen, wofür und wie viel.');return}kk.aus.push({p,c,beleg:g('ag')});render()}
+ else if(act==='kausdel'){KASSE[VERANST[+d.va]][d.ks].aus.splice(+d.j,1);render()}
+ else if(act==='ppok'){const v=VERANST[+d.va],geb=Math.round((+(document.getElementById('pp-'+d.va).value)||0)*100);FIN[v].forEach(x=>{if(x.pp==='offen')x.pp='da'});
+  if(geb>0)FIN[v].push({art:'Ausgabe',p:'PayPal-Gebühren',b:geb/100,q:'Auszahlung laut Kontoauszug'});toast('Auszahlung abgehakt.');render()}
  else if(act==='kfertig')kFertig(+d.va);
  else if(act==='ekdel'){const i=EK.findIndex(x=>x.id===+d.e);const e=EK[i];EK.splice(i,1);toast('Gelöscht: '+e.n);render()}
  else if(act==='ekok'){const i=EK.findIndex(x=>x.id===+d.e);const e=EK[i];EK.splice(i,1);
@@ -687,10 +722,14 @@ document.addEventListener('change',e=>{const el=e.target,d=el.dataset,a=S.a&&A.f
  else if(d.act==='pack'&&a){a.pack[+d.i].ok=el.checked;render()}
  else if(d.act==='cal'){S.cals[d.c]=el.checked?1:0;render()}
  else if(d.act==='kvon'||d.act==='kzweit'){KASSE[VERANST[+d.va]][d.act==='kvon'?'von':'zweit']=el.value}
+ else if(d.act==='kmw'){KASSE[VERANST[+d.va]].mw[d.ks]=el.value}
+ else if(d.act==='kmodus'){KASSE[VERANST[+d.va]].modus=el.value;render()}
 });
-document.addEventListener('input',e=>{const el=e.target,d=el.dataset;if(!d.kz)return;
- const k=KASSE[VERANST[+d.va]];k[d.kz][d.c]=Math.max(0,Math.floor(+el.value||0));const r=kCalc(k),set=(id,t)=>{const x=document.getElementById(id);if(x)x.innerHTML=t};
- set('kz-'+d.kz+'-'+d.c,cent(d.c*k[d.kz][d.c]));set('kz-sa',cent(r.a));set('kz-se',cent(r.e));set('kz-erg',ergHtml(r))});
+document.addEventListener('input',e=>{const el=e.target,d=el.dataset;if(!d.kz&&!d.kk)return;
+ const kk=KASSE[VERANST[+d.va]][d.ks],s=d.ks,set=(id,t)=>{const x=document.getElementById(id);if(x)x.innerHTML=t};
+ if(d.kk)kk.karte=Math.max(0,Math.round((+el.value||0)*100));
+ else{kk[d.kz][d.c]=Math.max(0,Math.floor(+el.value||0));set('kz-'+s+'-'+d.kz+'-'+d.c,cent(d.c*kk[d.kz][d.c]))}
+ const r=kCalc(kk);set('kz-'+s+'-sa',cent(r.a));set('kz-'+s+'-se',cent(r.e));set('kz-'+s+'-erg',ergHtml(r,s))});
 document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.dataset,a=S.a&&A.find(x=>x.id===S.a),val=id=>(document.getElementById(id)||{}).value;
  if(d.form==='kommentar'){const t=val('km').trim();if(!t)return;a.k.push({p:S.me,t,am:now()});
   if(a.fn&&!a.fg&&S.fv==='kommentar'&&/^Freigegeben:/i.test(t)){a.fg={von:S.me,am:now(),art:'kommentar'};logA(a,'Freigegeben (Kommentar)');toast('Als Freigabe übernommen.')}render()}
