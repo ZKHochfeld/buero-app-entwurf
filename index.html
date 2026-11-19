@@ -332,7 +332,13 @@ function vBereich(){const b=bb(S.b),me=S.me,mem=M.filter(m=>m.b===b.id);
  const z=mem.filter(m=>m.status==='aktiv');
  h+='<div class="row"><span class="muted">Zuständig:</span>'+(z.filter(m=>m.r==='zuständig').map(m=>'<span class="chip">'+esc(pn(m.p))+'</span>').join('')||'<span class="chip crit">niemand</span>')+
  '<span class="muted">Vertretung:</span>'+(z.filter(m=>m.r==='Vertretung').map(m=>'<span class="chip">'+esc(pn(m.p))+'</span>').join('')||'<span class="chip warn">fehlt</span>')+
- (isMem(b.id,me)?'<span class="chip ok">Du bist dabei</span>':'<button class="primary small" data-act="join" data-b="'+b.id+'">Beitreten</button>')+'</div>';
+ (isMem(b.id,me)?'<span class="chip ok">Du bist dabei</span><button class="small" data-act="form" data-f="verlassen">Bereich verlassen</button>':'<button class="primary small" data-act="join" data-b="'+b.id+'">Beitreten</button>')+'</div>';
+ if(S.form==='verlassen'){const rest=M.filter(m=>m.b===b.id&&m.p!==me&&m.status==='aktiv'&&m.r==='zuständig'),offen=A.filter(a=>a.b===b.id&&a.p===me&&open(a));
+  h+='<div class="box" style="margin-top:10px"><p><strong>Bereich „'+esc(b.name)+'“ wirklich verlassen?</strong></p>'+
+  (rest.length?'':'<p>Danach ist <strong>niemand mehr zuständig</strong>. Das erscheint in der Übersicht für die Runde.</p>')+
+  (offen.length?'<p>Deine <strong>'+offen.length+' offenen Aufgaben</strong> hier werden frei. Sie erscheinen in der Runde unter „Noch ohne Person“, damit jemand anderes sie übernimmt.</p>':'')+
+  (b.s?'<p>Ein Admin entfernt danach deinen Zugang zur geschützten Seite.</p>':'')+
+  '<div class="row"><button class="primary" data-act="leave" data-b="'+b.id+'">Ja, verlassen</button><button data-act="form" data-f="verlassen">Abbrechen</button></div></div>';}
  h+='<div class="tabs" role="tablist">'+[['aufgaben','Aufgaben'],['ablaeufe','Abläufe und Checklisten'],['leute','Mitwirkende']].map(t=>'<button role="tab" aria-selected="'+(S.tab===t[0])+'" data-act="tab" data-t="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>';
  if(S.tab==='aufgaben'){
   const top=A.filter(a=>a.b===b.id&&!a.parent),op=top.filter(open).sort((x,y)=>(x.frist||'9').localeCompare(y.frist||'9')),zu=top.filter(a=>!open(a));
@@ -466,6 +472,8 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
  else if(act==='join'){const b=bb(d.b);
   if(b.s){M.push({b:b.id,p:S.me,r:'zuständig',f:true,seit:HEUTE,status:'angefragt'});toast('Anfrage gestellt. Ein Admin bestätigt sie.')}
   else{M.push({b:b.id,p:S.me,r:'zuständig',f:true,seit:HEUTE,status:'aktiv'});toast('Du bist jetzt zuständig für '+b.name+'.')}render()}
+ else if(act==='leave'){for(let i=M.length-1;i>=0;i--){if(M[i].b===d.b&&M[i].p===S.me)M.splice(i,1)}
+  A.forEach(a=>{if(a.b===d.b&&a.p===S.me&&open(a)){a.p='';a.z=''}});S.form='';toast('Du hast den Bereich verlassen.');render()}
  else if(act==='bestaetigen'){const m=M.find(x=>x.b===d.b&&x.p===d.p&&x.status==='angefragt');if(m)m.status='aktiv';toast('Bestätigt. In echt bekommt die Person jetzt Zugang zur geschützten Seite.');render()}
  else if(act==='nehme'){a.p=S.me;a.z=isEinsatz(a)?'zugesagt':'';if(a.fs==='offen')a.fs='arbeit';toast('Übernommen.');render()}
  else if(act==='zusage'){const t=A.find(x=>x.id===+d.id);t.z=d.z;toast(d.z==='zugesagt'?'Zugesagt. Danke!':'Abgesagt. Die zuständige Person sieht das.');render()}
