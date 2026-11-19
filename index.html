@@ -113,6 +113,15 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute
 .people button{text-align:left;padding:10px 12px}
 .help ol{padding-left:20px}.help li{margin-bottom:6px}
 @media (prefers-reduced-motion:no-preference){.tile,button{transition:border-color .15s}}
+@media (max-width:640px){
+  header.top{position:static}
+  header.top .in{gap:6px 8px;padding-block:8px}
+  .brand{flex-basis:100%;font-size:16px}
+  nav{order:3;flex-basis:100%;flex-wrap:nowrap;overflow-x:auto}
+  nav button{padding:6px 8px;white-space:nowrap}
+  .bell,header.top .in>button[data-act="logout"]{padding:5px 9px;font-size:13px}
+  h1{font-size:24px}
+}
 </style>
 
 <div class="demo" role="note">Klick-Entwurf mit erfundenen Daten · nichts wird gespeichert · Neu laden setzt alles zurück</div>
