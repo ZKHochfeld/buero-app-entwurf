@@ -696,16 +696,20 @@ function spDraw(){const cv=document.getElementById('spc');if(!cv||!S.sp)return;c
  spCover(g,img,ix,iy,iw,ih);
  if(p.bildnw){g.font='500 22px system-ui,Arial';const bw=g.measureText(p.bildnw).width+24;g.fillStyle='rgba(0,0,0,.55)';g.fillRect(ix+iw-bw-16,iy+ih-48,bw,34);g.fillStyle='#fff';g.textAlign='left';g.fillText(p.bildnw,ix+iw-bw-4,iy+ih-24)}
  g.fillStyle=st.ak;g.fillRect(tx,ty-34,90,10);
- const big=sp.fmt==='quer'?58:sp.fmt==='story'?92:74;let fs=big,lines;g.textAlign='left';
- do{g.font='800 '+fs+'px system-ui,Arial';lines=spWrap(g,sp.titel||'',tw);fs-=4}while(lines.length>3&&fs>30);
- g.fillStyle=st.fg;lines.forEach((l,k)=>g.fillText(l,tx,ty+k*(fs+10)+fs*.85));let y=ty+lines.length*(fs+10)+fs*.85+18;
- const m=sp.fmt==='quer'?30:sp.fmt==='story'?44:36;g.font='700 '+m+'px system-ui,Arial';if(sp.zeile){g.fillText(sp.zeile,tx,y+m);y+=m+16}
- g.font='500 '+m+'px system-ui,Arial';if(sp.ort){spWrap(g,sp.ort,tw).forEach(l=>{g.fillText(l,tx,y+m);y+=m+10})}
- if(sp.hinweis){y+=14;g.font='700 '+(m-4)+'px system-ui,Arial';const hw=g.measureText(sp.hinweis).width+36;g.fillStyle=st.ak;g.fillRect(tx,y,hw,m+18);g.fillStyle=sp.stil==='rot'?'#e63323':'#fff';g.fillText(sp.hinweis,tx+18,y+m+2)}
- g.fillStyle=st.fg;g.font='700 '+(sp.fmt==='quer'?24:28)+'px system-ui,Arial';g.fillText('ZK Hochfeld · SGDV e.V.',tx,F.h-48)}
+ let k=1;for(const kk of [1,.92,.85,.78,.7,.62,.55]){k=kk;if(spBlock(g,sp,st,F,tx,ty,tw,kk,false)<=F.h-100)break}
+ spBlock(g,sp,st,F,tx,ty,tw,k,true);
+ g.fillStyle=st.fg;g.textAlign='left';g.font='700 '+(sp.fmt==='quer'?24:28)+'px system-ui,Arial';g.fillText('ZK Hochfeld · SGDV e.V.',tx,F.h-48)}
+function spBlock(g,sp,st,F,tx,ty,tw,k,draw){g.textAlign='left';let y=ty,fs=(sp.fmt==='quer'?58:sp.fmt==='story'?92:74)*k,lines;
+ do{g.font='800 '+Math.round(fs)+'px system-ui,Arial';lines=spWrap(g,sp.titel||'',tw);if(lines.length>3)fs-=4}while(lines.length>3&&fs>26);
+ g.fillStyle=st.fg;lines.forEach(l=>{y+=fs;if(draw)g.fillText(l,tx,y);y+=10});y+=10;
+ const m=Math.round((sp.fmt==='quer'?30:sp.fmt==='story'?44:36)*k);
+ if(sp.zeile){g.font='700 '+m+'px system-ui,Arial';y+=m;if(draw)g.fillText(sp.zeile,tx,y);y+=14}
+ if(sp.ort){g.font='500 '+m+'px system-ui,Arial';spWrap(g,sp.ort,tw).forEach(l=>{y+=m;if(draw)g.fillText(l,tx,y);y+=10})}
+ if(sp.hinweis){y+=16;g.font='700 '+(m-4)+'px system-ui,Arial';const hw=Math.min(g.measureText(sp.hinweis).width+36,tw);if(draw){g.fillStyle=st.ak;g.fillRect(tx,y,hw,m+18);g.fillStyle=sp.stil==='rot'?'#e63323':'#fff';g.fillText(sp.hinweis,tx+18,y+m+2)}y+=m+18}
+ return y}
 function spTexte(p,v){const kurz=p.text.split('. ')[0].replace(/\.$/,'')+'.';
  const anf=['Save the date!','Kommt vorbei!','Wir freuen uns auf euch!'][v%3];
- return anf+'\n\n'+p.titel+'\n'+p.datum+', '+p.zeit+'\n'+p.ort+(S.sp.hinweis?'\n'+S.sp.hinweis:'')+'\n\n'+kurz+(v%2?'\n\nAlle Infos auf zkhochfeld.de':'')+'\n\n#Hochfeld #Duisburg #ZKHochfeld'}
+ return anf+'\n\n'+(S.sp.titel||p.titel)+'\n'+(S.sp.zeile||p.datum+', '+p.zeit)+'\n'+(S.sp.ort||p.ort)+(S.sp.hinweis?'\n'+S.sp.hinweis:'')+'\n\n'+kurz+(v%2?'\n\nAlle Infos auf zkhochfeld.de':'')+'\n\n#Hochfeld #Duisburg #ZKHochfeld'}
 function vPresse(){const me=S.me;if(!S.sp)spInit(0);const sp=S.sp,p=PM[sp.i];
  let h='<div class="wrap"><h1>Pressematerial und Sharepics</h1><p class="sub">Bilder und Texte zu den Veranstaltungen, später automatisch aus dem Einreichformular der Webseite. Daraus entstehen Sharepics. Die KI schlägt einen Text vor, ein Mensch entscheidet.</p>';
  h+='<h2>Pressematerial</h2><section class="panel"><ul class="list">'+PM.map((x,i)=>'<li class="row" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0;flex:1"><strong>'+esc(x.titel)+'</strong> <span class="muted">· '+esc(x.datum)+'</span><br><span class="muted" style="font-size:13px">'+esc(x.quelle)+' · '+esc(x.bildnw)+'</span><br>'+
