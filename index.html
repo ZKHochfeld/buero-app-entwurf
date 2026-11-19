@@ -111,6 +111,13 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute
 .mev{border-left:3px solid var(--c);padding-left:4px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mev .evlink{font-size:12px;text-decoration:none}
 @media (max-width:640px){.mon{gap:2px}.mon .tag{min-height:58px;padding:2px}.mev .evlink{font-size:10px}.mev{border-left-width:2px;padding-left:2px}}
+.zettel h2{font-size:15px;margin:14px 0 4px;border-bottom:2px solid var(--accent)}
+.zettel table td,.zettel table th{border:1px solid var(--line)}
+.zettel .zl{height:24px}
+.zettel .sb{display:inline-block;width:52px;height:26px;border:1px solid var(--line);margin:0 4px 4px 0}
+.zettel .l{border-bottom:1px solid var(--line);height:24px;margin:4px 0}
+.zettel .k{color:var(--muted);font-size:13px}
+@media print{header.top,.demo,.noprint,nav{display:none!important}body{background:#fff;color:#000}.zettel{max-width:none;padding:0}.zettel *{color:#000}}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c)}
 .bell{position:relative}
 .bell b{position:absolute;top:-6px;right:-6px;background:var(--accent-fill);color:var(--on-accent);font-size:11px;border-radius:999px;padding:1px 6px}
@@ -797,20 +804,20 @@ function vGema(){const fin=isMem('fi',S.me);if(!(isMem('va',S.me)||fin))return '
   '<tr><td colspan="4"><strong>Summe 2026</strong></td><td><strong>'+eur(sum)+'</strong></td></tr></tbody></table></div><div class="row" style="margin-top:8px"><button data-act="kskcsv">Als Excel (CSV) herunterladen</button></div>'+
   '<p class="muted" style="font-size:13px">Grundlage für die jährliche Meldung an die Künstlersozialkasse. Nicht geprüft: ab wann der Verein abgabepflichtig ist, welcher Satz gilt und ob der an die Band ausgezahlte Eintritt mitzählt. Bitte mit der Steuerberatung oder der KSK klären.</p></section>'}
  return h+'</div>'}
-function abendzettel(v){const e=VA_E[v]||{},x=VD[v]||{};const w=window.open('','_blank');if(!w){toast('Bitte Pop-ups erlauben.');return}
- const leer='<td style="height:22px"></td>',rows=STUECK.map(c=>'<tr><td>'+stLbl(c)+'</td>'+leer+leer+leer+leer+'</tr>').join('');
+function abendzettel(v){S.zettel=v;S.zurueck=S.view;go('zettel')}
+function vZettel(){const v=S.zettel,e=VA_E[v]||{},x=VD[v]||{};if(!v)return vStart();
+ const leer='<td class="zl"></td>',rows=STUECK.map(c=>'<tr><td>'+stLbl(c)+'</td>'+leer+leer+leer+leer+'</tr>').join('');
  const strich=Array.from({length:12},()=>'<span class="sb"></span>').join('');
- w.document.write('<!doctype html><html lang="de"><head><meta charset=utf-8><title>Abendzettel '+esc(v)+'</title><style>body{font-family:Arial,sans-serif;font-size:11pt;margin:18mm 14mm;color:#111}h1{font-size:16pt;margin:0}h2{font-size:12pt;margin:14px 0 4px;border-bottom:2px solid #e63323}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:3px 6px;text-align:left;font-size:10pt}th{background:#f3eee6}.sb{display:inline-block;width:52px;height:26px;border:1px solid #999;margin:0 4px 4px 0}.l{border-bottom:1px solid #999;height:22px;margin:4px 0}.k{color:#555;font-size:9pt}@media print{button{display:none}}</style></head><body>'+
-  '<button onclick="print()">Drucken</button><h1>Abendzettel: '+esc(v)+'</h1><p class="k">ZK Hochfeld · SGDV e.V. · Ort: '+esc(e.o||'')+' · Eintritt: '+(x.preis&&+x.preis?esc(x.preis)+' €':'frei / ohne')+' · GEMA: '+(x.gema?'ja':'nein')+'</p>'+
+ return '<div class="wrap zettel"><div class="row noprint" style="margin-bottom:12px"><button class="primary" onclick="window.print()">Drucken</button><button data-act="nav" data-v="'+(S.zurueck||'start')+'">Zurück</button><span class="muted" style="font-size:13px">Auf Papier für den Abend. Danach in der App unter Finanzen › Kasse abrechnen eintragen.</span></div>'+
+  '<h1>Abendzettel: '+esc(v)+'</h1><p class="k">ZK Hochfeld · SGDV e.V. · Ort: '+esc(e.o||'')+' · Eintritt: '+(x.preis&&+x.preis?esc(x.preis)+' €':'frei / ohne')+' · GEMA: '+(x.gema?'ja':'nein')+'</p>'+
   '<h2>Ablauf</h2><table><tr><th>Aufbau</th><th>Soundcheck</th><th>Einlass</th><th>Beginn</th><th>Ende</th><th>Abbau bis</th></tr><tr>'+leer+leer+leer+'<td>'+esc(e.von||'')+'</td><td>'+esc(e.bis||'')+'</td>'+leer+'</tr></table>'+
   '<h2>Zahlende Gäste (Strichliste, je Kästchen 5 Striche)</h2><div>'+strich+'</div><p>Summe zahlende Gäste: ________ (für die GEMA)</p>'+
-  '<h2>Zählprotokoll</h2><table><tr><th>Schein / Münze</th><th>Abendkasse vorher</th><th>Abendkasse nachher</th><th>Thekenkasse vorher</th><th>Thekenkasse nachher</th></tr>'+rows+'<tr><th>Summe</th>'+leer+leer+leer+leer+'</tr></table>'+
+  '<h2>Zählprotokoll</h2><div class="scroll"><table><tr><th>Schein / Münze</th><th>Abendkasse vorher</th><th>Abendkasse nachher</th><th>Thekenkasse vorher</th><th>Thekenkasse nachher</th></tr>'+rows+'<tr><th>Summe</th>'+leer+leer+leer+leer+'</tr></table></div>'+
   '<p>Karte laut PayPal POS: Abendkasse ________ €   Thekenkasse ________ €</p>'+
   '<h2>Barausgaben aus der Kasse (Beleg in die Kasse)</h2><table><tr><th>Wofür</th><th>Betrag</th><th>Beleg-Nr.</th></tr><tr>'+leer+leer+leer+'</tr><tr>'+leer+leer+leer+'</tr></table>'+
   (x.gtyp==='eintritt'?'<p><strong>Eintritt geht an die Band:</strong> erst zählen, dann gegen Quittung auszahlen.</p>':'')+
   '<h2>Besondere Vorkommnisse</h2><div class="l"></div><div class="l"></div>'+
-  '<h2>Gezählt</h2><table><tr><th>Name</th><th>Unterschrift</th></tr><tr>'+leer+leer+'</tr><tr>'+leer+leer+'</tr></table><p class="k">Danach in der Büro-App unter Finanzen › Kasse abrechnen eintragen. Die Barkasse geht ins Büro.</p></body></html>');
- w.document.close()}
+  '<h2>Gezählt</h2><table><tr><th>Name</th><th>Unterschrift</th></tr><tr>'+leer+leer+'</tr><tr>'+leer+leer+'</tr></table><p class="k">Die Barkasse geht ins Büro.</p></div>'}
 function finCsv(){const rows=[['Veranstaltung','Datum','Art','Posten','MwSt','Betrag (EUR)','Herkunft','PayPal-Auszahlung']];
  VERANST.forEach(v=>FIN[v].forEach(x=>rows.push([v,fd(vaDatum(v)),x.art,x.p,x.mw||'',(x.art==='Ausgabe'?'-':'')+zahl(x.b),x.q,x.pp==='offen'?'offen':x.pp==='da'?'angekommen':''])));
  csvDl('Einnahmen_Ausgaben_je_Veranstaltung.csv',rows)}
@@ -838,7 +845,7 @@ function zumHtml(){return '<h2>Zumieten</h2><section class="panel">'+(ZM.length?
 
 function render(){let v;
  if(!S.me)v=vLogin();
- else v=header()+({start:vStart,bereich:vBereich,aufgabe:vAufgabe,neu:vNeu,kalender:vKalender,inventar:vInventar,einkauf:vEinkauf,finanzen:vFinanzen,gema:vGema,presse:vPresse,externe:vExterne,zeiten:vZeiten,runde:vRunde,hilfe:vHilfe}[S.view]||vStart)();
+ else v=header()+({start:vStart,bereich:vBereich,aufgabe:vAufgabe,neu:vNeu,kalender:vKalender,inventar:vInventar,einkauf:vEinkauf,finanzen:vFinanzen,gema:vGema,zettel:vZettel,presse:vPresse,externe:vExterne,zeiten:vZeiten,runde:vRunde,hilfe:vHilfe}[S.view]||vStart)();
  $('#app').innerHTML=v;if(S.view==='presse')spDraw()}
 
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el||el.tagName==='SELECT'||el.type==='checkbox')return;
