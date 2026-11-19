@@ -149,8 +149,8 @@ M.push({b:'pe',p:'mira',r:'zuständig',f:true,seit:'2026-11-18',status:'angefrag
 
 let nid=100;
 const A=[];
-function T(o){const a=Object.assign({id:++nid,parent:null,p:'',frist:'',fs:'offen',art:'Büro',z:'',fn:false,fg:null,grund:'',k:[],pack:null,datum:'',von:'',bis:'',notiz:''},o);A.push(a);return a}
-T({t:'Raumanfrage Geburtstagsfeier am 12.12. beantworten',b:'vm',p:'deniz',frist:'2026-11-21',fs:'arbeit',fn:true,notiz:'Anfrage kam über Bookings. Vortreffen am Telefon hat stattgefunden.'});
+function T(o){const a=Object.assign({id:++nid,parent:null,p:'',frist:'',fs:'offen',art:'Büro',z:'',fn:false,fg:null,grund:'',k:[],pack:null,datum:'',von:'',bis:'',notiz:'',wv:'',wvText:'',ks:'',log:[]},o);A.push(a);return a}
+T({t:'Raumanfrage Geburtstagsfeier am 12.12. beantworten',b:'vm',p:'deniz',frist:'2026-11-21',fs:'arbeit',fn:true,notiz:'Anfrage kam über Bookings. Vortreffen am Telefon hat stattgefunden.',ks:'Vermietung',wv:'2026-11-19',wvText:'Rückruf: Gästezahl und Ende der Feier klären'});
 T({t:'Mietvertrag Chorprobe (Januar) vorbereiten',b:'vm',p:'deniz',frist:'2026-11-17',fn:true});
 T({t:'Schlüsselübergabe für den Chor klären',b:'vm',frist:'2026-11-25'});
 T({t:'Anfrage Firmenfeier am 05.12.',b:'vm',p:'deniz',fs:'abgesagt',grund:'Saal an dem Tag schon belegt',frist:'2026-11-17'});
@@ -181,6 +181,16 @@ T({t:'Fahren und Aufbau',b:'ft',parent:ft.id,art:'Einsatz',p:'jona',z:'angefragt
 T({t:'Theke am Foodtruck',b:'ft',parent:ft.id,art:'Theke',p:'mira',z:'zugesagt',datum:'2026-11-28',von:'14:00',bis:'18:00',frist:'2026-11-28'});
 T({t:'Abbau und Reinigung',b:'ft',parent:ft.id,art:'Einsatz',datum:'2026-11-28',von:'18:00',bis:'20:00',frist:'2026-11-28'});
 ft.k.push({p:'mira',t:'Ich kann die Theke übernehmen, Sam ist an dem Tag nicht da.',am:'18.11., 16:05'});
+ft.ks='Foodtruck';lesung.ks='Eigenveranstaltung';
+ft.log=[{p:'mira',t:'Zugesagt: Theke am Foodtruck',am:'18.11., 16:04'},{p:'deniz',t:'Jona für „Fahren und Aufbau“ angefragt',am:'18.11., 11:30'},{p:'deniz',t:'Vorgang aus Vorlage „Foodtruck-Einsatz“ angelegt',am:'17.11., 10:12'}];
+const KS=['–','Eigenveranstaltung','Vermietung','Projekt Nachbarschaft (Fördermittel)','Kinder und Jugend (Fördermittel)','Foodtruck','Verein allgemein'];
+const INV=[
+ {id:1,n:'Bühne (4 × 3 m, Elemente)',m:1,o:'Lager Keller',res:[{d:'2026-11-28',z:'Nachbarschaftsfest (Foodtruck)',p:'deniz'}]},
+ {id:2,n:'Musikanlage (2 Boxen, Mischpult)',m:1,o:'Saal, Technikschrank',res:[{d:'2026-11-27',z:'Lesung',p:'mira'}]},
+ {id:3,n:'Biertischgarnituren',m:10,o:'Lager Hof',res:[{d:'2026-11-21',z:'Verliehen an Nachbarschaftsverein (Vertrag „Nur Equipment“)',p:'deniz'}]},
+ {id:4,n:'Pavillon 3 × 3 m',m:2,o:'Lager Hof',res:[{d:'2026-11-28',z:'Nachbarschaftsfest (Foodtruck)',p:'deniz'}]},
+ {id:5,n:'Kabeltrommel 25 m',m:3,o:'Lager Keller',res:[]},
+ {id:6,n:'Foodtruck',m:1,o:'Hof',res:[{d:'2026-11-28',z:'Nachbarschaftsfest',p:'deniz'}]}];
 
 const VL=[
  {id:1,b:'ft',name:'Foodtruck-Einsatz',items:[
@@ -224,18 +234,21 @@ const CAL=[
  {id:'va',name:'Veranstaltungen',c:'#e63323',pub:true},{id:'te',name:'Termine',c:'#3b7dd8'},
  {id:'ur',name:'Urlaub',c:'#8a7a6a'},{id:'rb',name:'Raumbelegung (neu)',c:'#d99a12'}];
 const E=[
- {cal:'va',d:'2026-11-22',von:'18:00',bis:'22:00',t:'Kiezabend',o:'Saal'},
- {cal:'va',d:'2026-11-27',von:'18:00',bis:'20:00',t:'Lesung: Geschichten aus Hochfeld',o:'Saal'},
- {cal:'va',d:'2026-11-28',von:'14:00',bis:'18:00',t:'Nachbarschaftsfest mit Foodtruck',o:'draußen'},
+ {cal:'va',d:'2026-11-22',von:'18:00',bis:'22:00',t:'Kiezabend',o:'Saal',web:true},
+ {cal:'va',d:'2026-11-27',von:'18:00',bis:'20:00',t:'Lesung: Geschichten aus Hochfeld',o:'Saal',web:true},
+ {cal:'va',d:'2026-11-28',von:'14:00',bis:'18:00',t:'Nachbarschaftsfest mit Foodtruck',o:'draußen',web:false},
  {cal:'te',d:'2026-11-19',von:'16:00',bis:'17:00',t:'Telefonat mit der Chorleitung'},
  {cal:'te',d:'2026-11-20',von:'15:00',bis:'16:00',t:'Gespräch beim Ordnungsamt'},
  {cal:'te',d:'2026-11-23',von:'10:00',bis:'11:00',t:'Büro-Runde'},
  {cal:'ur',d:'2026-11-21',t:'Mira – abwesend',p:'mira'},
  {cal:'ur',d:'2026-11-28',t:'Sam – abwesend',p:'sam'},
- {cal:'rb',d:'2026-11-22',von:'17:00',bis:'23:00',t:'Saal: Kiezabend',o:'Saal'},
- {cal:'rb',d:'2026-11-27',von:'17:00',bis:'21:00',t:'Saal: Lesung (Aufbau ab 17 Uhr)',o:'Saal'},
- {cal:'rb',d:'2026-11-27',von:'19:00',bis:'22:00',t:'Saal: Chorprobe',o:'Saal'},
- {cal:'rb',d:'2026-11-26',von:'14:00',bis:'17:00',t:'Gruppenraum: Bastelnachmittag',o:'Gruppenraum'}];
+ {cal:'rb',d:'2026-11-22',von:'17:00',bis:'23:00',t:'Saal: Kiezabend',o:'Saal',st:'fest'},
+ {cal:'rb',d:'2026-11-24',von:'08:00',bis:'20:00',t:'Saal gesperrt: Boden wird versiegelt',o:'Saal',st:'gesperrt'},
+ {cal:'rb',d:'2026-11-27',von:'17:00',bis:'21:00',t:'Saal: Lesung (Aufbau ab 17 Uhr)',o:'Saal',st:'fest'},
+ {cal:'rb',d:'2026-11-27',von:'19:00',bis:'22:00',t:'Saal: Chorprobe',o:'Saal',st:'optioniert'},
+ {cal:'rb',d:'2026-11-26',von:'14:00',bis:'17:00',t:'Gruppenraum: Bastelnachmittag',o:'Gruppenraum',st:'fest'}];
+E.forEach((e,i)=>e.i=i);
+const ST={angefragt:'angefragt',optioniert:'optioniert (vorgemerkt)',fest:'fest gebucht',gesperrt:'gesperrt'};
 
 const S={me:null,view:'login',b:null,a:null,tab:'aufgaben',fv:'knopf',cals:{va:1,te:1,ur:1,rb:1},form:'',bell:false,vorlage:null};
 
@@ -256,7 +269,8 @@ const ARTEN=['Büro','Einsatz','Theke','Einkauf','Putzen','Küche','Sonstiges'];
 const isEinsatz=a=>!!a.datum;
 const now=()=>{const d=new Date();return '19.11.2026, '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
 function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>el.hidden=true,2600)}
-function go(view,o){Object.assign(S,{view,form:'',bell:false},o||{});render();window.scrollTo(0,0)}
+function go(view,o){Object.assign(S,{view,form:'',bell:false,invMsg:''},o||{});render();window.scrollTo(0,0)}
+function logA(a,t){a.log.unshift({p:S.me,t,am:now()})}
 
 function abwesend(p,d){return E.some(e=>e.cal==='ur'&&e.p===p&&e.d===d)}
 function verfuegbar(p,a){
@@ -272,6 +286,7 @@ function hinweise(){const me=S.me,h=[];
   if(a.p===me&&a.z==='angefragt')h.push({a,t:'Du wurdest eingeplant: '+a.t+' ('+fd(a.datum)+', '+a.von+'–'+a.bis+')'});
   else if(a.p===me&&open(a)&&a.frist&&a.frist>=HEUTE&&a.frist<='2026-11-21')h.push({a,t:'Frist naht: '+a.t+' ('+fd(a.frist)+')'});
   if(a.fn&&!a.fg&&open(a)&&canFg(a.b))h.push({a,t:'Freigabe fehlt: '+a.t});
+  if(a.wv&&a.wv<=HEUTE&&open(a)&&a.p===me)h.push({a,t:'Wiedervorlage: '+a.wvText});
  });return h}
 
 function chipsFor(a){let c='';
@@ -288,7 +303,7 @@ function aItem(a,showB){const kids=A.filter(x=>x.parent===a.id);
  '<div class="chips">'+chipsFor(a)+'</div></li>'}
 
 function header(){const h=hinweise();
- const nav=[['start','Start'],['kalender','Kalender'],['zeiten','Meine Zeiten'],['runde','Runde'],['hilfe','So geht’s']];
+ const nav=[['start','Start'],['kalender','Kalender'],['inventar','Inventar'],['zeiten','Meine Zeiten'],['runde','Runde'],['hilfe','So geht’s']];
  return '<header class="top"><div class="in" style="position:relative"><div class="brand"><i></i>Büro-App</div><nav aria-label="Hauptmenü">'+
  nav.map(n=>'<button data-act="nav" data-v="'+n[0]+'"'+(S.view===n[0]?' aria-current="page"':'')+'>'+n[1]+'</button>').join('')+
  '</nav><button class="bell" data-act="bell" aria-expanded="'+S.bell+'" aria-label="Hinweise, '+h.length+' neu">Hinweise'+(h.length?'<b>'+h.length+'</b>':'')+'</button>'+
@@ -312,6 +327,8 @@ function vStart(){const me=S.me,mine=B.filter(b=>isMem(b.id,me));
  h+='<div class="row" style="margin-top:6px"><span class="muted">Meine Bereiche:</span>'+(mine.length?mine.map(b=>'<button class="chip" data-act="bereich" data-b="'+b.id+'">'+esc(b.name)+'</button>').join(''):'<span class="muted">noch keiner. Unten einen Bereich öffnen und beitreten.</span>')+'</div>';
  h+='<div class="cols" style="margin-top:14px"><section class="panel"><h3>Meine Aufgaben ('+my.length+')</h3>'+(my.length?'<ul class="list">'+my.map(a=>aItem(a,true)).join('')+'</ul>':'<p class="muted">Keine offenen Aufgaben.</p>')+'</section>';
  h+='<div style="display:flex;flex-direction:column;gap:14px;min-width:0"><section class="panel"><h3>Anfragen an mich ('+req.length+')</h3>'+(req.length?'<ul class="list">'+req.map(a=>'<li><div class="main"><button class="link" data-act="aufgabe" data-id="'+a.id+'">'+esc(a.t)+'</button><div class="muted" style="font-size:13px">'+fd(a.datum)+', '+a.von+'–'+a.bis+' Uhr · '+esc(bb(a.b).name)+'</div></div><div class="row"><button class="small primary" data-act="zusage" data-id="'+a.id+'" data-z="zugesagt">Zusagen</button><button class="small" data-act="zusage" data-id="'+a.id+'" data-z="abgesagt">Absagen</button></div></li>').join('')+'</ul>':'<p class="muted">Keine offenen Anfragen.</p>')+'</section>';
+ const wvs=A.filter(a=>a.wv&&a.wv<=HEUTE&&open(a)&&(a.p===me||isMem(a.b,me)));
+ h+='<section class="panel"><h3>Wiedervorlagen ('+wvs.length+')</h3>'+(wvs.length?'<ul class="list">'+wvs.map(a=>'<li><div class="main"><button class="link" data-act="aufgabe" data-id="'+a.id+'">'+esc(a.wvText)+'</button><div class="muted" style="font-size:13px">'+esc(a.t)+'</div></div></li>').join('')+'</ul>':'<p class="muted">Nichts fällig.</p>')+'</section>';
  h+='<section class="panel"><h3>Heute</h3>'+(today.length?today.map(evHtml).join(''):'<p class="muted">Keine Termine.</p>')+'</section></div></div>';
  h+='<h2>Alle Bereiche</h2><div class="tiles">'+B.map(tile).join('')+'</div>';
  h+='<p class="muted" style="font-size:13px;margin-top:10px">Neue Bereiche kommen dazu, indem jemand eine Zeile in der Liste „Bereiche“ ergänzt. Die Kachel erscheint dann von selbst.</p></div>';
@@ -374,10 +391,13 @@ function vAufgabe(){const a=A.find(x=>x.id===S.a),b=bb(a.b),me=S.me,par=a.parent
  h+='<div class="cols"><section class="panel"><div class="grid2"><span class="muted">Person</span><span>'+(a.p?esc(pn(a.p)):'<strong>noch niemand</strong>')+'</span>'+
  '<span class="muted">Art</span><span>'+esc(a.art)+'</span>'+(isEinsatz(a)?'<span class="muted">Wann</span><span>'+fd(a.datum)+', '+a.von+'–'+a.bis+' Uhr</span>':'')+
  '<span class="muted">Frist</span><span>'+fd(a.frist)+(over(a)?' <span class="chip crit">überfällig</span>':'')+'</span>'+
+ '<label for="ks" class="muted" style="font-size:15px">Kostenstelle</label><select id="ks" data-act="ks">'+KS.map(k=>'<option'+(a.ks===k||(!a.ks&&k==='–')?' selected':'')+'>'+k+'</option>').join('')+'</select>'+
+ '<span class="muted">Wiedervorlage</span><span>'+(a.wv?fd(a.wv)+': '+esc(a.wvText)+(a.wv<=HEUTE?' <span class="chip warn">fällig</span>':''):'–')+' <button class="small" data-act="form" data-f="wv">'+(a.wv?'Ändern':'Setzen')+'</button></span>'+
  '<label for="fs" class="muted" style="font-size:15px">Fortschritt</label><select id="fs" data-act="fs">'+['offen','arbeit','erledigt'].map(k=>'<option value="'+k+'"'+(a.fs===k?' selected':'')+'>'+FS[k]+'</option>').join('')+(a.fs==='abgesagt'?'<option selected>Abgesagt</option>':'')+'</select>'+
  '</div>'+(a.notiz?'<p>'+esc(a.notiz)+'</p>':'')+(a.fs==='abgesagt'?'<div class="box crit"><p><strong>Abgesagt.</strong> Grund: '+esc(a.grund)+'</p><p class="muted" style="font-size:13px">Die Absage erscheint in der Übersicht für die Runde.</p></div>':'')+
  '<div class="row" style="margin-top:12px">'+(a.p!==me&&open(a)?'<button class="primary" data-act="nehme">Ich mach das</button>':'')+(a.p===me&&a.z==='angefragt'?'<button class="primary" data-act="zusage" data-id="'+a.id+'" data-z="zugesagt">Zusagen</button><button data-act="zusage" data-id="'+a.id+'" data-z="abgesagt">Absagen</button>':'')+
  (open(a)&&!a.parent&&isMem(b.id,me)?'<button data-act="form" data-f="absage">Anfrage absagen</button>':'')+'</div>';
+ if(S.form==='wv')h+='<form class="inline" data-form="wv"><label>Wiedervorlage am<input id="wv-d" type="date" value="'+(a.wv||'2026-11-24')+'" required></label><label class="grow">Woran erinnern?<input id="wv-t" required value="'+esc(a.wvText)+'" placeholder="z. B. Rückruf wegen Gästezahl"></label><button class="primary">Speichern</button></form>';
  if(S.form==='absage')h+='<form class="inline" data-form="absage"><label class="grow">Kurzer Grund (erscheint in der Runde)<input id="ab-g" required placeholder="z. B. Aufwand zu groß, wir brauchen eine Pause"></label><button class="primary">Absagen</button></form>';
  h+='</section>';
  // rechts: Einsatz-Planung oder Freigabe
@@ -395,6 +415,7 @@ function vAufgabe(){const a=A.find(x=>x.id===S.a),b=bb(a.b),me=S.me,par=a.parent
  if(a.pack){h+='<h2>Packliste</h2><section class="panel">'+a.pack.map((x,i)=>'<label class="check" style="color:var(--fg);font-size:15px;flex-direction:row"><input type="checkbox" data-act="pack" data-i="'+i+'"'+(x.ok?' checked':'')+'><span class="'+(x.ok?'done':'')+'">'+esc(x.t)+'</span></label>').join('')+'</section>'}
  h+='<h2>Kommentare ('+a.k.length+')</h2><section class="panel">'+(a.k.length?'<ul class="list">'+a.k.map(k=>'<li><div class="main"><strong>'+esc(pn(k.p))+'</strong> <span class="muted" style="font-size:13px">'+esc(k.am)+'</span><div>'+esc(k.t)+'</div></div></li>').join('')+'</ul>':'<p class="muted">Noch keine Kommentare.</p>')+
  '<form class="inline" data-form="kommentar"><label class="grow">Kommentar<input id="km" required placeholder="Rückfrage oder Notiz für die Übergabe"></label><button>Senden</button></form></section>';
+ h+='<h2>Verlauf</h2><section class="panel">'+(a.log.length?'<ul class="list">'+a.log.map(l=>'<li><div class="main"><span class="muted" style="font-size:13px">'+esc(l.am)+' · '+esc(pn(l.p))+'</span><div>'+esc(l.t)+'</div></div></li>').join('')+'</ul>':'<p class="muted">Noch keine Einträge.</p>')+'<p class="muted" style="font-size:13px">Die App schreibt hier von selbst mit, wer was geändert hat. Das hilft bei der Übergabe.</p></section>';
  return h+'</div>'}
 
 function freigabeHtml(a){const ok=canFg(a.b),wer=M.filter(m=>m.b===a.b&&m.f&&m.status==='aktiv').map(m=>pn(m.p)).join(', ');
@@ -411,10 +432,13 @@ function vNeu(){const vs=VL.filter(v=>!S.b||v.b===S.b);const sel=S.vorlage||(vs[
  '<label>Name des Vorgangs<input id="nv-t" required value="Foodtruck beim Adventsmarkt"></label><label>Datum<input id="nv-d" type="date" value="2026-12-12" required></label>'+
  '<p class="muted" style="margin:0;font-size:13px">Die App legt alle Schritte und Einsätze als Teilaufgaben an und übernimmt die Packliste. Personen trägst du danach ein, für Einsätze schlägt die App passende Leute vor.</p><button class="primary">Vorgang anlegen</button></form>':'<p>Für diesen Bereich gibt es noch keine Vorlage.</p>')+'</div>'}
 
-function evHtml(e){const c=CAL.find(x=>x.id===e.cal);return '<div class="ev" style="--c:'+c.c+'"><time>'+(e.von?e.von+'–'+e.bis:'ganztägig')+'</time><span class="main" style="min-width:0;flex:1">'+esc(e.t)+(e.o?' <span class="muted">· '+esc(e.o)+'</span>':'')+'</span><span class="chip'+(c.pub?' pub':'')+'">'+esc(c.name)+(c.pub?' · auf der Webseite':'')+'</span></div>'}
+function evHtml(e){const c=CAL.find(x=>x.id===e.cal);let x='';
+ if(e.st)x+='<span class="chip'+(e.st==='fest'?' ok':e.st==='gesperrt'?' crit':' warn')+'">'+ST[e.st]+'</span>'+((e.st==='optioniert'||e.st==='angefragt')&&S.me&&canFg('vm')?'<button class="small" data-act="fest" data-i="'+e.i+'">Fest buchen</button>':'');
+ if(c.pub)x+=e.web?'<span class="chip ok">auf der Webseite</span>':'<span class="chip warn">noch nicht auf der Webseite</span>'+(S.me&&canFg('va')?'<button class="small" data-act="web" data-i="'+e.i+'">Für Webseite freigeben</button>':'');
+ return '<div class="ev" style="--c:'+c.c+'"><time>'+(e.von?e.von+'–'+e.bis:'ganztägig')+'</time><span class="main" style="min-width:0;flex:1">'+esc(e.t)+(e.o?' <span class="muted">· '+esc(e.o)+'</span>':'')+'</span><span class="chip">'+esc(c.name)+'</span>'+x+'</div>'}
 function vKalender(){const k=konflikte();let h='<div class="wrap"><h1>Kalender</h1><p class="sub">Alle Kalender des SGDV aus Google, in einer Ansicht. Ein- und ausblenden mit den Schaltern.</p>';
  h+='<div class="row">'+CAL.map(c=>'<label class="chip" style="--c:'+c.c+';cursor:pointer;flex-direction:row;color:var(--fg)"><input type="checkbox" data-act="cal" data-c="'+c.id+'"'+(S.cals[c.id]?' checked':'')+'> <span class="dot"></span> '+esc(c.name)+'</label>').join('')+'</div>';
- h+='<div class="box" style="margin-top:12px"><p><strong>Regel:</strong> In den Kalender „Veranstaltungen“ kommt nur, was öffentlich sein soll. Alles daraus erscheint automatisch auf der Webseite. Vermietungen und interne Belegungen gehören in „Raumbelegung“.</p></div>';
+ h+='<div class="box" style="margin-top:12px"><p><strong>Regel:</strong> In den Kalender „Veranstaltungen“ kommt nur, was öffentlich sein soll. Auf der Webseite erscheint ein Termin erst, wenn jemand ihn <strong>für die Webseite freigibt</strong>. Vermietungen und interne Belegungen gehören in „Raumbelegung“, mit Status angefragt, optioniert oder fest. Gesperrte Räume stehen dort auch.</p><p class="muted" style="font-size:13px">Für die Freigabe zur Webseite braucht das Webseiten-Plugin eine kleine Änderung.</p></div>';
  if(k.length)h+='<div class="box crit" style="margin-top:10px">'+k.map(p=>'<p><strong>Mögliche Doppelbelegung:</strong> '+fd(p[0].d)+', '+esc(p[0].o)+': „'+esc(p[0].t)+'“ ('+p[0].von+'–'+p[0].bis+') und „'+esc(p[1].t)+'“ ('+p[1].von+'–'+p[1].bis+')</p>').join('')+'</div>';
  const days=[];for(let i=0;i<14;i++){const d=new Date(2026,10,16+i);days.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'))}
  days.forEach(d=>{const ev=E.filter(e=>e.d===d&&S.cals[e.cal]).sort((x,y)=>(x.von||'').localeCompare(y.von||''));if(!ev.length)return;
@@ -450,12 +474,19 @@ function vHilfe(){return '<div class="wrap help"><h1>So geht’s</h1><div class=
  '<li>Was nach außen geht, braucht eine <strong>Freigabe</strong>. Erst danach wird es verschickt.</li><li>Wer ausfällt: Alles steht in der Aufgabe. Eine andere Person kann weitermachen.</li></ol>'+
  '<p><button class="link" data-act="aufgabe" data-id="'+ft.id+'">Beispiel ansehen: Foodtruck beim Nachbarschaftsfest</button></p></section>'+
  '<section class="panel"><h3>Wörter kurz erklärt</h3><p><strong>Freigabe:</strong> Eine Person, die das darf, sagt: Dieser Entwurf darf so raus.</p><p><strong>Übergabe:</strong> In der Aufgabe steht alles Wichtige. So kann eine andere Person weitermachen.</p>'+
- '<p><strong>Vollmacht:</strong> Der Vorstand erlaubt einer Person schriftlich, für den Verein zu unterschreiben, zum Beispiel einen Mietvertrag nach Vorlage.</p><p><strong>Zusage:</strong> Niemand wird fest eingeplant, ohne selbst zuzusagen.</p>'+
+ '<p><strong>Vollmacht:</strong> Der Vorstand erlaubt einer Person schriftlich, für den Verein zu unterschreiben, zum Beispiel einen Mietvertrag nach Vorlage.</p><p><strong>Zusage:</strong> Niemand wird fest eingeplant, ohne selbst zuzusagen.</p><p><strong>Status von Raumbelegungen:</strong> angefragt, dann optioniert (vorgemerkt), dann fest gebucht. „Gesperrt“ heißt: Der Raum ist nicht nutzbar.</p><p><strong>Wiedervorlage:</strong> Die App erinnert dich an einem bestimmten Tag an eine Aufgabe.</p>'+
  '<h3 style="margin-top:14px">Was die KI macht und was nicht</h3><p>Sie liest, sortiert, rechnet und schreibt Entwürfe und Checklisten. Sie entscheidet nichts, verschickt nichts und unterschreibt nichts. Das machen Menschen.</p></section></div></div>'}
+
+function vInventar(){let h='<div class="wrap"><h1>Inventar und Verleih</h1><p class="sub">Was wir haben, wo es steht und wann es gebraucht wird. Wer etwas reserviert, sieht sofort, ob es an dem Tag schon weg ist.</p>';
+ h+='<section class="panel"><div class="scroll"><table><thead><tr><th>Gegenstand</th><th>Anzahl</th><th>Standort</th><th>Reserviert oder verliehen</th></tr></thead><tbody>'+
+ INV.map(x=>'<tr><td>'+esc(x.n)+'</td><td>'+x.m+'</td><td>'+esc(x.o)+'</td><td>'+(x.res.length?x.res.slice().sort((a,b)=>a.d.localeCompare(b.d)).map(r=>'<div><strong>'+fd(r.d)+'</strong> '+esc(r.z)+' <span class="muted">('+esc(pn(r.p))+')</span></div>').join(''):'<span class="muted">frei</span>')+'</td></tr>').join('')+'</tbody></table></div>';
+ h+='<form class="inline" data-form="inv"><label>Gegenstand<select id="iv-x">'+INV.map(x=>'<option value="'+x.id+'">'+esc(x.n)+'</option>').join('')+'</select></label><label>Datum<input id="iv-d" type="date" value="2026-11-28" required></label><label class="grow">Wofür oder an wen<input id="iv-z" required placeholder="z. B. Verleih an Kulturverein"></label><button class="primary">Reservieren</button></form>';
+ if(S.invMsg)h+='<div class="box crit" style="margin-top:10px"><p>'+S.invMsg+'</p></div>';
+ return h+'<p class="muted" style="font-size:13px">Verleih nach außen läuft über die Vertragsvorlage „Nur Equipment“ und braucht eine Freigabe.</p></section></div>'}
 
 function render(){let v;
  if(!S.me)v=vLogin();
- else v=header()+({start:vStart,bereich:vBereich,aufgabe:vAufgabe,neu:vNeu,kalender:vKalender,zeiten:vZeiten,runde:vRunde,hilfe:vHilfe}[S.view]||vStart)();
+ else v=header()+({start:vStart,bereich:vBereich,aufgabe:vAufgabe,neu:vNeu,kalender:vKalender,inventar:vInventar,zeiten:vZeiten,runde:vRunde,hilfe:vHilfe}[S.view]||vStart)();
  $('#app').innerHTML=v}
 
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el||el.tagName==='SELECT'||el.type==='checkbox')return;
@@ -473,32 +504,39 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
   if(b.s){M.push({b:b.id,p:S.me,r:'zuständig',f:true,seit:HEUTE,status:'angefragt'});toast('Anfrage gestellt. Ein Admin bestätigt sie.')}
   else{M.push({b:b.id,p:S.me,r:'zuständig',f:true,seit:HEUTE,status:'aktiv'});toast('Du bist jetzt zuständig für '+b.name+'.')}render()}
  else if(act==='leave'){for(let i=M.length-1;i>=0;i--){if(M[i].b===d.b&&M[i].p===S.me)M.splice(i,1)}
-  A.forEach(a=>{if(a.b===d.b&&a.p===S.me&&open(a)){a.p='';a.z=''}});S.form='';toast('Du hast den Bereich verlassen.');render()}
+  A.forEach(a=>{if(a.b===d.b&&a.p===S.me&&open(a)){a.p='';a.z='';logA(a,'Frei geworden, weil '+pn(S.me)+' den Bereich verlassen hat')}});S.form='';toast('Du hast den Bereich verlassen.');render()}
  else if(act==='bestaetigen'){const m=M.find(x=>x.b===d.b&&x.p===d.p&&x.status==='angefragt');if(m)m.status='aktiv';toast('Bestätigt. In echt bekommt die Person jetzt Zugang zur geschützten Seite.');render()}
- else if(act==='nehme'){a.p=S.me;a.z=isEinsatz(a)?'zugesagt':'';if(a.fs==='offen')a.fs='arbeit';toast('Übernommen.');render()}
- else if(act==='zusage'){const t=A.find(x=>x.id===+d.id);t.z=d.z;toast(d.z==='zugesagt'?'Zugesagt. Danke!':'Abgesagt. Die zuständige Person sieht das.');render()}
- else if(act==='anfragen'){a.p=d.p;a.z='angefragt';toast(pn(d.p)+' wurde angefragt und bekommt einen Hinweis.');render()}
+ else if(act==='nehme'){a.p=S.me;a.z=isEinsatz(a)?'zugesagt':'';if(a.fs==='offen')a.fs='arbeit';logA(a,'Übernommen');toast('Übernommen.');render()}
+ else if(act==='web'){E[+d.i].web=true;toast('Freigegeben: Der Termin erscheint jetzt auf der Webseite.');render()}
+ else if(act==='fest'){E[+d.i].st='fest';toast('Fest gebucht.');render()}
+ else if(act==='zusage'){const t=A.find(x=>x.id===+d.id);t.z=d.z;logA(t,d.z==='zugesagt'?'Zugesagt':'Einsatz abgesagt');toast(d.z==='zugesagt'?'Zugesagt. Danke!':'Abgesagt. Die zuständige Person sieht das.');render()}
+ else if(act==='anfragen'){a.p=d.p;a.z='angefragt';logA(a,pn(d.p)+' angefragt');toast(pn(d.p)+' wurde angefragt und bekommt einen Hinweis.');render()}
  else if(act==='fv'){S.fv=d.v;render()}
- else if(act==='freigeben'){a.fg={von:S.me,am:now(),art:'knopf'};toast('Freigegeben.');render()}
+ else if(act==='freigeben'){a.fg={von:S.me,am:now(),art:'knopf'};logA(a,'Freigegeben (Knopf)');toast('Freigegeben.');render()}
  else if(act==='zdel'){const i=V.findIndex(x=>x.id===+d.id);if(i>-1)V.splice(i,1);render()}
  else if(act==='neueVorlage'){VL.push({id:VL.length+1,b:d.b,name:'Ablauf '+bb(d.b).name,items:[]});S.tab='ablaeufe';render()}
 });
 document.addEventListener('change',e=>{const el=e.target,d=el.dataset,a=S.a&&A.find(x=>x.id===S.a);
- if(d.act==='fs'&&a){a.fs=el.value;toast('Fortschritt: '+FS[el.value]);render()}
+ if(d.act==='fs'&&a){a.fs=el.value;logA(a,'Fortschritt: '+FS[el.value]);toast('Fortschritt: '+FS[el.value]);render()}
+ else if(d.act==='ks'&&a){a.ks=el.value==='–'?'':el.value;logA(a,'Kostenstelle: '+el.value);toast('Kostenstelle gespeichert.');render()}
  else if(d.act==='pack'&&a){a.pack[+d.i].ok=el.checked;render()}
  else if(d.act==='cal'){S.cals[d.c]=el.checked?1:0;render()}
 });
 document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.dataset,a=S.a&&A.find(x=>x.id===S.a),val=id=>(document.getElementById(id)||{}).value;
  if(d.form==='kommentar'){const t=val('km').trim();if(!t)return;a.k.push({p:S.me,t,am:now()});
-  if(a.fn&&!a.fg&&S.fv==='kommentar'&&/^Freigegeben:/i.test(t)){a.fg={von:S.me,am:now(),art:'kommentar'};toast('Als Freigabe übernommen.')}render()}
- else if(d.form==='absage'){a.fs='abgesagt';a.grund=val('ab-g');S.form='';toast('Abgesagt. Steht jetzt in der Übersicht für die Runde.');render()}
+  if(a.fn&&!a.fg&&S.fv==='kommentar'&&/^Freigegeben:/i.test(t)){a.fg={von:S.me,am:now(),art:'kommentar'};logA(a,'Freigegeben (Kommentar)');toast('Als Freigabe übernommen.')}render()}
+ else if(d.form==='wv'){a.wv=val('wv-d');a.wvText=val('wv-t');logA(a,'Wiedervorlage am '+fd(a.wv)+': '+a.wvText);S.form='';toast('Wiedervorlage gesetzt.');render()}
+ else if(d.form==='inv'){const x=INV.find(i=>i.id===+val('iv-x')),dd=val('iv-d'),z=val('iv-z'),am=x.res.filter(r=>r.d===dd);
+  if(am.length>=x.m){S.invMsg='<strong>Schon belegt:</strong> '+esc(x.n)+' ist am '+fd(dd)+' reserviert für „'+esc(am[0].z)+'“. Sprich dich mit '+esc(pn(am[0].p))+' ab.';render()}
+  else{x.res.push({d:dd,z,p:S.me});S.invMsg='';toast('Reserviert: '+x.n+', '+fd(dd)+'.');render()}}
+ else if(d.form==='absage'){a.fs='abgesagt';a.grund=val('ab-g');logA(a,'Abgesagt: '+a.grund);S.form='';toast('Abgesagt. Steht jetzt in der Übersicht für die Runde.');render()}
  else if(d.form==='punkt'){const v=VL.find(x=>x.id===+d.v);v.items.push({typ:val('pt-typ-'+v.id),t:val('pt-text-'+v.id),von:S.me});toast('Ergänzt. Danke!');render()}
  else if(d.form==='aufgabe'){const art=val('na-art'),ein=['Einsatz','Theke'].includes(art),dd=val('na-d');
   const n=T({t:val('na-t'),b:d.b,parent:d.parent?+d.parent:null,art,frist:dd,datum:ein?dd:'',von:ein?val('na-von'):'',bis:ein?val('na-bis'):''});
-  S.form='';toast('Angelegt.');if(!d.parent)go('aufgabe',{a:n.id});else render()}
+  logA(n,'Angelegt');S.form='';toast('Angelegt.');if(!d.parent)go('aufgabe',{a:n.id});else render()}
  else if(d.form==='neu'){const v=VL.find(x=>x.id===+val('nv-v')),dd=val('nv-d');
   const par=T({t:val('nv-t'),b:v.b,p:S.me,frist:dd,fs:'arbeit',fn:true,notiz:'Angelegt aus der Vorlage „'+v.name+'“.',pack:v.items.filter(i=>i.typ==='Packliste').map(i=>({t:i.t,ok:false}))});
-  if(!par.pack.length)par.pack=null;
+  if(!par.pack.length)par.pack=null;logA(par,'Vorgang aus Vorlage „'+v.name+'“ angelegt');
   v.items.filter(i=>i.typ==='Schritt'||i.typ==='Anforderung').forEach(i=>T({t:(i.typ==='Anforderung'?'Klären: ':'')+i.t,b:v.b,parent:par.id,frist:dd}));
   v.items.filter(i=>i.typ==='Einsatz').forEach(i=>T({t:i.t,b:v.b,parent:par.id,art:'Einsatz',datum:dd,von:'14:00',bis:'18:00',frist:dd}));
   toast('Vorgang mit '+A.filter(x=>x.parent===par.id).length+' Teilaufgaben angelegt.');go('aufgabe',{a:par.id})}
