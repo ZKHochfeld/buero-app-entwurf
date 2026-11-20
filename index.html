@@ -232,6 +232,14 @@ const INV=[
  {id:11,k:'Geschirr und Gläser',n:'Einwegteller (Verbrauch)',m:120,mb:100,o:'Küche, Regal 2',res:[]}];
 INV.push({id:12,k:'Geschirr und Gläser',n:'Einwegbecher (Verbrauch)',m:200,mb:150,o:'Küche, Regal 2',res:[]});
 INV.push({id:13,k:'Geschirr und Gläser',n:'Pommesschalen (Verbrauch)',m:170,mb:150,o:'Foodtruck, Fach unten',res:[]});
+INV.push({id:14,k:'Küche',n:'Friteuse',m:1,o:'Foodtruck',res:[]},{id:15,k:'Küche',n:'Kochtopf 10 l',m:2,o:'Küche, Regal 1',res:[]},{id:16,k:'Küche',n:'Löffel, Kellen und Zangen (Kiste)',m:1,o:'Foodtruck, Schublade',res:[]});
+// Gerichte des Foodtrucks: einmal anlegen, immer wieder nutzen. Zutaten je Portion: [Zutat, Menge, Einheit, Preis je Einheit (geschätzt)]
+const GER=[
+ {id:1,n:'Pommes',preis:3.5,zut:[['Pommes (TK)',0.2,'kg',2.8],['Frittierfett',0.03,'l',3.5],['Pommesschalen',1,'Stück',0.05]],inv:[[14,1],[16,1]]},
+ {id:2,n:'Linsensuppe mit Brot',preis:4,zut:[['Rote Linsen',0.08,'kg',3.2],['Zwiebeln',0.05,'kg',1.8],['Möhren',0.05,'kg',1.5],['Gemüsebrühe',0.3,'l',0.6],['Brot',1,'Stück',0.4]],inv:[[15,1],[16,1]]},
+ {id:3,n:'Falafel im Brot',preis:5,zut:[['Falafel (TK)',5,'Stück',0.25],['Fladenbrot',1,'Stück',0.6],['Salat und Tomaten',0.05,'kg',4],['Sesamsoße',0.03,'l',8]],inv:[[14,1],[16,1]]}];
+let gid=4;
+const FTK={'Nachbarschaftsfest mit Foodtruck (Sa 28.11.)':{gs:[{g:1,preis:3.5,port:80,verk:''},{g:2,preis:4,port:40,verk:''}],ek:null,res:null,diesel:25}};
 const PREIS={2:1200,5:45,7:110,8:900,9:150,10:350,11:0.12,12:0.08,13:0.05};
 const eur=v=>v.toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 const VB=[];
@@ -456,7 +464,7 @@ function tile(b){const mine=isMem(b.id,S.me);
  (M.some(m=>m.b===b.id&&m.status==='aktiv'&&m.r==='zuständig')?'':'<span class="chip crit">niemand zuständig</span>')+'</span></button>'}
 
 function vBereich(){const b=bb(S.b),me=S.me,mem=M.filter(m=>m.b===b.id);
- let h='<div class="wrap"><div class="crumb"><button class="link" data-act="nav" data-v="start">Start</button> › '+esc(b.name)+'</div><h1>'+esc(b.name)+'</h1>';
+ let h='<div class="wrap"><div class="crumb"><button class="link" data-act="nav" data-v="start">Start</button> › '+esc(b.name)+'</div><h1>'+esc(b.name)+'</h1>'+(b.id==='ft'&&canFt()?'<p><button class="primary" data-act="ftopen">Einsätze: Speisekarte, Einkauf, Kasse</button></p>':'');
  const pending=mem.find(m=>m.p===me&&m.status==='angefragt');
  if(!canSee(b.id)){
   return h+'<div class="box"><p><strong>Dieser Bereich ist nur für Zuständige sichtbar.</strong> Die Aufgaben liegen auf einer eigenen, geschützten SharePoint-Seite.</p>'+
@@ -643,7 +651,7 @@ function vExterne(){const fin=isMem('fi',S.me);
  return h+'<div class="box" style="margin-top:12px"><p><strong>Datenschutz:</strong> Nur aufnehmen, wer einverstanden ist. Honorare sehen nur die Leute aus Finanzen. Kontaktdaten nicht in den Chat mit der KI kopieren.</p><p><strong>Geld:</strong> Wer ein Honorar bekommt, braucht einen Vertrag. Der braucht eine Freigabe wie jede Ausgabe. Die App setzt dann von selbst „Freigabe nötig“.</p></div></div>'}
 
 function vEinkauf(){let h='<div class="wrap"><h1>Einkaufsliste</h1><p class="sub">Für alle Bereiche. Was im Inventar als kaputt oder weg ausgetragen wird, landet hier von selbst. Alles andere kann jede Person selbst eintragen.</p>';
- h+='<section class="panel">'+(EK.length?'<ul class="list">'+EK.map(e=>'<li><div class="main"><strong>'+esc(e.n)+'</strong> · '+e.m+' Stück<div class="muted" style="font-size:13px">'+esc(e.grund)+' · '+(e.quelle==='Inventar'?'aus dem Inventar':'eingetragen')+' von '+esc(pn(e.von))+', '+esc(e.am)+'</div></div><div class="row"><button class="small primary" data-act="ekok" data-e="'+e.id+'">Gekauft</button><button class="small" data-act="ekdel" data-e="'+e.id+'">Nicht nötig, löschen</button></div></li>').join('')+'</ul>':'<p class="muted">Die Liste ist leer.</p>')+
+ h+='<section class="panel">'+(EK.length?'<ul class="list">'+EK.map(e=>'<li><div class="main"><strong>'+esc(e.n)+'</strong> · '+(e.e?menge(e.m)+' '+esc(e.e):e.m+' Stück')+'<div class="muted" style="font-size:13px">'+esc(e.grund)+' · '+(e.quelle==='Inventar'?'aus dem Inventar':e.quelle==='Foodtruck'?'aus der Foodtruck-Speisekarte':'eingetragen')+' von '+esc(pn(e.von))+', '+esc(e.am)+'</div></div><div class="row"><button class="small primary" data-act="ekok" data-e="'+e.id+'">Gekauft</button><button class="small" data-act="ekdel" data-e="'+e.id+'">Nicht nötig, löschen</button></div></li>').join('')+'</ul>':'<p class="muted">Die Liste ist leer.</p>')+
  '<form class="inline" data-form="ekneu"><label class="grow">Was wird gebraucht?<input id="ek-n" required placeholder="z. B. Spülmittel für die Theke"></label><label>Anzahl<input id="ek-m" type="number" min="1" value="1" required></label><button>Auf die Liste</button></form></section>';
  return h+'<div class="box" style="margin-top:12px"><p><strong>Gekauft</strong> heißt: Der Gegenstand kommt zurück ins Inventar, wenn er von dort stammt.</p><p><strong>Noch offen für die Runde:</strong> Wer kauft ein, und ab welchem Betrag braucht ein Kauf eine Freigabe?</p></div></div>'}
 
@@ -669,17 +677,17 @@ function vFinanzen(){if(!isMem('fi',S.me))return '<div class="wrap"><h1>Finanzen
   '<tr><td colspan="3"><strong>Ergebnis</strong></td><td colspan="2"><strong>'+eur(e-a)+'</strong></td></tr></tbody></table></div>':'<p class="muted">Noch keine Einträge.</p>')+
   (FIN[v].some(x=>x.pp==='offen')?'<div class="row" style="align-items:flex-end;margin-top:10px"><label>PayPal-Auszahlung angekommen? Gebühren (€)<input id="pp-'+i+'" type="number" step="0.01" min="0" style="width:120px" placeholder="laut Auszug"></label><button data-act="ppok" data-va="'+i+'">Abhaken</button></div>':'')+
   '<form class="inline" data-form="fin" data-va="'+i+'"><label>Posten<select id="fi-k-'+i+'">'+['Einnahme','Ausgabe'].map(a=>'<optgroup label="'+a+'n">'+KPOS[a].map(q=>'<option value="'+a+'|'+esc(q)+'">'+esc(q)+'</option>').join('')+'</optgroup>').join('')+'</select></label><label class="grow">Notiz<input id="fi-p-'+i+'" placeholder="z. B. Rechnung Druckerei"></label><label>Betrag (€)<input id="fi-b-'+i+'" type="number" step="0.01" min="0" required></label><button>Eintragen</button></form></section>';
-  if(!/laufender/.test(v)){const k=KASSE[v];h+=(k&&k.fertig)||S.kasse===v?kasseHtml(v):'<p class="row"><button class="primary" data-act="kopen" data-va="'+i+'">Kasse abrechnen (Zählprotokoll)</button><button data-act="zettel" data-va="'+i+'">Abendzettel drucken</button>'+(VA_E[v]?'<button data-act="deal" data-ev="'+VA_E[v].i+'">Deal und Kalkulation</button>':'')+'</p>'}});
+  if(!/laufender/.test(v)){const k=KASSE[v];h+=(k&&k.fertig)||S.kasse===v?kasseHtml(v):'<p class="row"><button class="primary" data-act="kopen" data-va="'+i+'">Kasse abrechnen (Zählprotokoll)</button><button data-act="zettel" data-va="'+i+'">Abendzettel drucken</button>'+(VA_E[v]?'<button data-act="deal" data-ev="'+VA_E[v].i+'">Deal und Kalkulation</button>':'')+(ftVa(v)&&VA_E[v]?'<button data-act="ftopen" data-ev="'+VA_E[v].i+'">Foodtruck: Speisekarte und Kalkulation</button>':'')+'</p>'}});
  return h+'</div>'}
 function rechnungHtml(a){const r=a.rechnung;let sum=0;
  const rows=r.pos.map(p=>{const ep=PREIS[p.inv],s=ep!=null?ep*p.m:null;if(s!=null)sum+=s;return '<tr><td>'+esc(p.n)+'</td><td>'+p.m+'</td><td>'+(ep!=null?eur(ep):'<span class="chip warn">Preis fehlt</span>')+'</td><td>'+(s!=null?eur(s):'–')+'</td></tr>'}).join('');
  return '<section class="panel"><h3>Verbrauchsrechnung: '+esc(r.va)+'</h3><div class="scroll"><table><thead><tr><th>Posten</th><th>Menge</th><th>Preis je Stück</th><th>Summe</th></tr></thead><tbody>'+rows+
  '<tr><td colspan="3"><strong>Gesamt</strong></td><td><strong>'+eur(sum)+'</strong></td></tr></tbody></table></div><p class="muted" style="font-size:13px">Nur für Finanzen sichtbar. Die Preise kommen aus der geschützten Liste „Inventarwerte“.</p></section>'}
-const KS2={abend:'Abendkasse (Eintritt)',theke:'Thekenkasse (Getränke)'};
-const POS2={abend:'Eintritt',theke:'Getränke'};
+const KS2={abend:'Abendkasse (Eintritt)',theke:'Thekenkasse (Getränke)',ft:'Barkasse Foodtruck'};
+const POS2={abend:'Eintritt',theke:'Getränke',ft:'Verkauf Foodtruck'};
 const MWST=['','19 %','7 %','steuerfrei'];
 const MODUS={kein:'Kein Eintritt (keine Abendkasse)',verein:'Eintritt bleibt beim Verein',band_aus:'Wir kassieren, die Band bekommt den Eintritt (Quittung)',band_selbst:'Die Band kassiert selbst (keine Abendkasse)'};
-function kAktiv(k){return k.modus==='band_selbst'||k.modus==='kein'?['theke']:['abend','theke']}
+function kAktiv(k){if(k.ft)return ['ft'];return k.modus==='band_selbst'||k.modus==='kein'?['theke']:['abend','theke']}
 function kAlle(k){const r={};let ges=0;kAktiv(k).forEach(s=>{r[s]=kCalc(k[s]);ges+=r[s].ges});r.ges=ges;return r}
 function ergHtml(r,s){return '<p>Kasse nachher '+cent(r.e)+' − Wechselgeld vorher '+cent(r.a)+' + Barausgaben '+cent(r.aus)+' = <strong>bar '+cent(r.ein)+'</strong></p><p>+ Karte (PayPal POS) '+cent(r.karte)+' = <strong>'+POS2[s]+' gesamt '+cent(r.ges)+'</strong></p>'+(r.ein<0?'<p>Achtung: Nachher ist weniger Geld in der Kasse als vorher. Bitte noch einmal zählen und Barausgaben prüfen.</p>':'')}
 function kProtokoll(kk,edit,i,s){const r=kCalc(kk),inp=(w,c)=>'<input type="number" min="0" step="1" inputmode="numeric" style="width:70px;text-align:right" data-kz="'+w+'" data-ks="'+s+'" data-c="'+c+'" data-va="'+i+'" value="'+(kk[w][c]||'')+'" aria-label="'+KS2[s]+', '+stLbl(c)+(w==='a'?' vorher':' nachher')+', Stückzahl">';
@@ -696,14 +704,16 @@ function kTeil(k,s,i){const kk=k[s],r=kCalc(kk);
  '<label style="margin-top:10px;max-width:320px">Kartenzahlungen laut PayPal POS (€)<input type="number" step="0.01" min="0" data-kk="karte" data-ks="'+s+'" data-va="'+i+'" value="'+(kk.karte?kk.karte/100:'')+'" placeholder="aus dem Tagesbericht"></label>'+
  '<p class="muted" style="font-size:13px;margin:4px 0 0">Den Tagesbericht aus PayPal POS als PDF in die Aufgabe hängen. Nur den Kartenanteil eintragen, damit Bargeld nicht doppelt zählt.</p>'+
  '<div class="box ok" id="kz-'+s+'-erg" style="margin-top:10px">'+ergHtml(r,s)+'</div></div>'}
-function kasseHtml(v){if(!isMem('fi',S.me))return '<div class="box"><p>Die Kassenabrechnung sehen nur die Personen, die Finanzen machen.</p></div>';
- const i=VERANST.indexOf(v),neu=()=>({a:{},e:{},aus:[],karte:0}),k=KASSE[v]||(KASSE[v]={abend:neu(),theke:neu(),modus:/Foodtruck/.test(v)?'kein':'verein',mw:{abend:'',theke:'19 %'},von:S.me,zweit:'',fertig:null});
+function ftVa(v){return /Foodtruck/.test(v)||(VA_E[v]&&VA_E[v].b==='ft')}
+function kasseHtml(v){if(!(isMem('fi',S.me)||(ftVa(v)&&isMem('ft',S.me))))return '<div class="box"><p>Die Kassenabrechnung sehen nur die Personen, die Finanzen machen.</p></div>';
+ const i=VERANST.indexOf(v),neu=()=>({a:{},e:{},aus:[],karte:0}),k=KASSE[v]||(KASSE[v]={abend:neu(),theke:neu(),ft:ftVa(v)?neu():null,modus:ftVa(v)?'kein':'verein',mw:{abend:'',theke:'19 %',ft:''},von:S.me,zweit:'',fertig:null});
  if(k.fertig){const r=kAlle(k);return '<section class="panel"><h3>Kasse abgerechnet: '+esc(v)+'</h3><p>'+esc(MODUS[k.modus])+'.</p>'+kAktiv(k).map(s=>'<div class="box ok" style="margin-top:8px"><p><strong>'+KS2[s]+'</strong> (Mehrwertsteuer '+esc(k.mw[s]||'nicht gewählt')+')</p>'+ergHtml(r[s],s)+'</div>').join('')+
   '<p class="muted" style="font-size:13px">Gezählt von '+esc(pn(k.fertig.von))+(k.fertig.zweit?' und '+esc(pn(k.fertig.zweit)):' (allein)')+' am '+esc(k.fertig.am)+'.</p>'+
   kAktiv(k).map(s=>'<details><summary>Zählprotokoll '+KS2[s]+'</summary>'+kProtokoll(k[s],false,i,s)+(k[s].aus.length?'<ul>'+k[s].aus.map(x=>'<li>'+esc(x.p)+': '+cent(x.c)+' (Beleg '+esc(x.beleg||'fehlt')+')</li>').join('')+'</ul>':'')+'</details>').join('')+'</section>'}
  const opt=(sel,leer)=>(leer?'<option value="">niemand</option>':'')+P.map(p=>'<option value="'+p.id+'"'+(p.id===sel?' selected':'')+'>'+esc(p.name)+'</option>').join('');
- return '<section class="panel" id="kasse"><h3>Kasse abrechnen: '+esc(v)+'</h3><p class="muted" style="font-size:13px">Zwei Kassen: Abendkasse für den Eintritt, Thekenkasse für Getränke. Je Kasse ein Zählprotokoll, dazu die Kartenzahlungen aus PayPal POS. Die App rechnet die Einnahmen aus. Am besten zu zweit zählen.</p>'+
- '<form data-form="kasse" data-va="'+i+'"><label style="max-width:520px">Eintritt bei dieser Veranstaltung<select data-act="kmodus" data-va="'+i+'">'+Object.keys(MODUS).map(m=>'<option value="'+m+'"'+(m===k.modus?' selected':'')+'>'+MODUS[m]+'</option>').join('')+'</select></label>'+
+ return '<section class="panel" id="kasse"><h3>Kasse abrechnen: '+esc(v)+'</h3>'+(k.ft?'':'<p class="muted" style="font-size:13px">')+(k.ft?'':'Zwei Kassen: Abendkasse für den Eintritt, Thekenkasse für Getränke. Je Kasse ein Zählprotokoll, dazu die Kartenzahlungen aus PayPal POS. Die App rechnet die Einnahmen aus. Am besten zu zweit zählen.</p>')+
+ (k.ft?'<p class="muted" style="font-size:13px">Foodtruck: Verkauft wird aus dem Wagen heraus. Eine Barkasse mit Zählprotokoll, dazu die Kartenzahlungen aus PayPal POS.</p>':'')+
+ '<form data-form="kasse" data-va="'+i+'">'+(k.ft?'':'<label style="max-width:520px">Eintritt bei dieser Veranstaltung<select data-act="kmodus" data-va="'+i+'">'+Object.keys(MODUS).map(m=>'<option value="'+m+'"'+(m===k.modus?' selected':'')+'>'+MODUS[m]+'</option>').join('')+'</select></label>')+
  (k.modus!=='kein'?'<label style="max-width:320px;margin-top:8px">Zahlende Gäste laut Strichliste (für die GEMA)<input type="number" min="0" data-kg="1" data-va="'+i+'" value="'+(k.gaeste||'')+'"></label>':'')+kAktiv(k).map(s=>kTeil(k,s,i)).join('')+
  '<div class="row" style="align-items:flex-end;margin-top:12px"><label>Gezählt von<select data-act="kvon" data-va="'+i+'">'+opt(k.von)+'</select></label><label>Zweite Person<select data-act="kzweit" data-va="'+i+'">'+opt(k.zweit,1)+'</select></label><button type="button" class="primary" data-act="kfertig" data-va="'+i+'">Abrechnung abschließen</button></div>'+
  '<p class="muted" style="font-size:13px">Beim Abschließen kommen die Einnahmen getrennt nach Eintritt und Getränke, bar und Karte, mit Mehrwertsteuersatz in die Übersicht, dazu jede Barausgabe. Eine geschätzte Einnahme wird ersetzt. Bekommt die Band den Eintritt, steht die Auszahlung an die Band als Ausgabe darin.</p></form></section>'}
@@ -714,8 +724,9 @@ function kFertig(i){const v=VERANST[i],k=KASSE[v],r=kAlle(k),akt=kAktiv(k);
  k.fertig={von:k.von,zweit:k.zweit,am:now()};const wer=pn(k.von)+(k.zweit?' und '+pn(k.zweit):'');
  const vorher=FIN[v].length;FIN[v]=FIN[v].filter(x=>!(x.art==='Einnahme'&&/Schätzung/.test(x.p)));const ersetzt=vorher-FIN[v].length;
  akt.forEach(s=>{const x=r[s],mw=k.mw[s];
-  if(x.ein)FIN[v].push({art:'Einnahme',p:POS2[s]+' bar',b:x.ein/100,mw,q:'Zählprotokoll, gezählt von '+wer});
-  if(x.karte)FIN[v].push({art:'Einnahme',p:POS2[s]+' Karte (PayPal POS)',b:x.karte/100,mw,q:'Tagesbericht PayPal POS',pp:'offen'});
+  const kt=s==='ft'?'Essen und Foodtruck':undefined;
+  if(x.ein)FIN[v].push({art:'Einnahme',p:POS2[s]+' bar',b:x.ein/100,mw,kat:kt,q:'Zählprotokoll, gezählt von '+wer});
+  if(x.karte)FIN[v].push({art:'Einnahme',p:POS2[s]+' Karte (PayPal POS)',b:x.karte/100,mw,kat:kt,q:'Tagesbericht PayPal POS',pp:'offen'});
   k[s].aus.forEach(a=>FIN[v].push({art:'Ausgabe',p:a.p+' (bar aus der '+KS2[s].split(' ')[0]+')',b:a.c/100,q:'Beleg '+(a.beleg||'fehlt')}))});
  if(k.modus==='band_aus'&&r.abend.ges)FIN[v].push({art:'Ausgabe',p:'Eintritt an die Band ausgezahlt',b:r.abend.ges/100,q:'Quittung der Band'});
  const dd=dealVon(v);if(dd&&dd.dtyp==='garantie'&&r.abend){FIN[v]=FIN[v].filter(f=>f.q!=='Gage laut GEMA und KSK'&&f.q!=='Gage laut Deal');const g=Math.round(bandAnteil(dd,r.abend.ges/100)*100)/100;FIN[v].push({art:'Ausgabe',p:'Gage '+dd.partner+' laut Deal (Garantie + Beteiligung)',b:g,q:'Gage laut Deal',kat:'Gagen'});if(VD[v])VD[v].gage=String(g)}
@@ -878,7 +889,7 @@ const FF=['Zuschauererwartung'];
 const KSA={satz:''};
 const DEAL={};let vnr=131;
 const KPOS={Einnahme:['Eintritt Abendkasse','Eintritt Vorverkauf','Getränke','Essen und Foodtruck','Catering (wir bieten an)','Raummiete','Werbung','Sponsoring','Zuschüsse','Sonstige Einnahmen'],
- Ausgabe:['Gagen','Reisekosten','Hotel / Unterkunft','Catering für Künstler*innen','Sonstige Künstlerkosten','Wareneinsatz Getränke und Essen','GEMA','Künstlersozialabgabe','Werbung: Gestaltung','Werbung: Druck','Werbung: Plakatierung','Werbung: Flyerverteilung','Pressearbeit','Post und Telefon','Werbung sonstige','Deko','Veranstaltungstechnik','Genehmigungen und Gebühren','Versicherung','Lohnkosten (nur Summe)','PayPal-Gebühren','Sonstige Kosten']};
+ Ausgabe:['Gagen','Reisekosten','Hotel / Unterkunft','Catering für Künstler*innen','Sonstige Künstlerkosten','Wareneinsatz Getränke und Essen','Diesel','GEMA','Künstlersozialabgabe','Werbung: Gestaltung','Werbung: Druck','Werbung: Plakatierung','Werbung: Flyerverteilung','Pressearbeit','Post und Telefon','Werbung sonstige','Deko','Veranstaltungstechnik','Genehmigungen und Gebühren','Versicherung','Lohnkosten (nur Summe)','PayPal-Gebühren','Sonstige Kosten']};
 function dealNeu(e){return {art:e.cal==='rb'?'miete':'band',partner:'',firma:'',ansprech:'',str:'',ort:'',mail:'',vtyp:'',genre:'',einlass:'',ende:e.bis||'',preis:'',erm:'',vvk:false,vvkPreis:'',vvkKont:'',
  dtyp:'ohne',gage:'',sockel:'',pBand:'',kosten:'',gtext:'',unterk:'keine',unterkBem:'',cat:'nein',catPreis:'',reise:'',catWir:false,catWirPreis:'',
  miete:'',pa:'',techniker:'',ordner:'',mcat:'',licht:'',msonst:'',mw:'',mStart:e.von||'',mEnde:e.bis||'',pVer:'',vereinb:'',vstat:'keiner',vnr:'',vdat:'',ff:{},plan:{},erw:'',zl:{aufbau:'',soundcheck:'',abbau:''},zx:[],hin:{},abend:''}}
@@ -1090,9 +1101,61 @@ function dauerHtml(){let h='<section class="panel"><h3>Daueraufgaben ('+DA.lengt
  return h}
 dealSeed();
 
+// Foodtruck: Speisekarte je Einsatz, Einkaufsliste und Inventar aus den Gerichten, Kalkulation, Kasse
+function canFt(){return isMem('ft',S.me)||isMem('fi',S.me)}
+function menge(m){return (+m||0).toLocaleString('de-DE',{maximumFractionDigits:2})}
+function ftEvents(){return E.filter(e=>e.b==='ft'&&e.cal==='va').sort((a,b)=>a.d<b.d?-1:1)}
+function ftk(v){return FTK[v]||(FTK[v]={gs:[],ek:null,res:null,diesel:''})}
+function gg(id){return GER.find(g=>g.id===+id)}
+function ftZut(k){const m={};k.gs.forEach(x=>{const g=gg(x.g);if(!g)return;g.zut.forEach(([n,mg,e,pr])=>{const key=n+'|'+e;if(!m[key])m[key]={n,e,m:0,pr:+pr||0};m[key].m+=mg*(+x.port||0)})});return Object.values(m).filter(z=>z.m>0)}
+function ftInv(k){const m={};k.gs.forEach(x=>{const g=gg(x.g);if(!g)return;g.inv.forEach(([id,n])=>{m[id]=Math.max(m[id]||0,n)})});return Object.keys(m).map(id=>({x:INV.find(i=>i.id===+id),n:m[id]})).filter(o=>o.x)}
+function ftPlan(k){const um=k.gs.reduce((s,x)=>s+(+x.preis||0)*(+x.port||0),0),we=ftZut(k).reduce((s,z)=>s+z.m*z.pr,0);return {um,we,die:+k.diesel||0}}
+function ftNeuVa(e){const v=vaName(e);if(!FIN[v]){FIN[v]=[];VERANST.splice(Math.max(0,VERANST.length-1),0,v)}return v}
+function vFoodtruck(){if(!canFt())return '<div class="wrap"><h1>Foodtruck</h1><div class="box"><p>Diese Seite sehen die Leute aus dem Bereich Foodtruck und Finanzen.</p></div></div>';
+ const evs=ftEvents();if(!evs.length)return '<div class="wrap"><h1>Foodtruck</h1><p class="muted">Noch keine Foodtruck-Termine im Kalender.</p></div>';
+ let e=E[S.ftv];if(!e||e.b!=='ft')e=evs.find(x=>x.d>=HEUTE)||evs[evs.length-1];S.ftv=e.i;
+ const v=ftNeuVa(e),k=ftk(v),pl=ftPlan(k),i=VERANST.indexOf(v),fi=isMem('fi',S.me);
+ let h='<div class="wrap"><div class="crumb"><button class="link" data-act="bereich" data-b="ft">Foodtruck</button> › Einsätze</div><h1>Foodtruck: Einsatz planen und abrechnen</h1>'+
+  '<p class="sub">Aus dem Foodtruck heraus wird verkauft. Je Einsatz: Speisekarte mit Preisen, Einkaufsliste und Inventar aus den Gerichten, Kalkulation, Einnahmen und Ausgaben, Kasse (Barkasse und PayPal POS). Sehen alle im Bereich Foodtruck und Finanzen. Alle Zahlen im Entwurf sind erfunden.</p>'+
+  '<label style="max-width:460px">Einsatz<select data-act="ftwahl">'+evs.map(x=>'<option value="'+x.i+'"'+(x.i===e.i?' selected':'')+'>'+esc(vaName(x))+(x.d<HEUTE?' · vorbei':'')+'</option>').join('')+'</select></label>';
+ // Speisekarte
+ const frei=GER.filter(g=>!k.gs.some(x=>+x.g===g.id));
+ h+='<h2>Speisekarte</h2><section class="panel"><p class="muted" style="font-size:13px;margin-top:0">Die Preise gelten nur für diesen Einsatz. Der übliche Preis steht unten beim Gericht. „Verkauft“ nach dem Einsatz laut Strichliste eintragen, dann lässt sich die Menge beim nächsten Mal besser planen.</p>'+
+  (k.gs.length?'<div class="scroll"><table><thead><tr><th>Gericht</th><th>Preis (€)</th><th>Portionen geplant</th><th>Verkauft</th><th>Umsatz geplant</th><th></th></tr></thead><tbody>'+k.gs.map((x,j)=>{const g=gg(x.g);return '<tr><td>'+esc(g?g.n:'?')+'</td><td><input type="number" step="0.1" min="0" style="width:80px" data-ftk="preis" data-j="'+j+'" value="'+esc(x.preis)+'" aria-label="Preis '+esc(g?g.n:'')+'"></td><td><input type="number" min="0" style="width:80px" data-ftk="port" data-j="'+j+'" value="'+esc(x.port)+'" aria-label="Portionen geplant '+esc(g?g.n:'')+'"></td><td><input type="number" min="0" style="width:80px" data-ftk="verk" data-j="'+j+'" value="'+esc(x.verk)+'" aria-label="Verkauft '+esc(g?g.n:'')+'"></td><td>'+eur((+x.preis||0)*(+x.port||0))+'</td><td><button class="small" data-act="ftgdel" data-j="'+j+'">Entfernen</button></td></tr>'}).join('')+'</tbody></table></div>':'<p class="muted">Noch keine Gerichte auf der Speisekarte.</p>')+
+  (frei.length?'<form class="inline" data-form="ftadd"><label>Gericht<select id="ft-add">'+frei.map(g=>'<option value="'+g.id+'">'+esc(g.n)+' ('+eur(g.preis)+')</option>').join('')+'</select></label><label>Portionen<input id="ft-port" type="number" min="0" style="width:90px" placeholder="z. B. 50"></label><button>Auf die Speisekarte</button></form>':'')+'</section>';
+ // Einkaufsliste
+ const zut=ftZut(k);
+ h+='<h2>Einkaufsliste für diesen Einsatz</h2><section class="panel">'+(zut.length?'<div class="scroll"><table><thead><tr><th>Zutat</th><th>Menge</th><th>geschätzt</th></tr></thead><tbody>'+zut.map(z=>'<tr><td>'+esc(z.n)+'</td><td>'+menge(z.m)+' '+esc(z.e)+'</td><td>'+(z.pr?eur(z.m*z.pr):'–')+'</td></tr>').join('')+'<tr><td colspan="2"><strong>Wareneinsatz geschätzt</strong></td><td><strong>'+eur(pl.we)+'</strong></td></tr></tbody></table></div>'+
+  '<div class="row" style="margin-top:8px"><button class="primary" data-act="ftek">'+(k.ek?'Einkaufsliste aktualisieren':'Auf die Einkaufsliste')+'</button>'+(k.ek?'<span class="chip ok">übernommen '+esc(k.ek)+'</span>':'')+'</div><p class="muted" style="font-size:13px">Die Mengen rechnet die App aus den Zutaten je Portion mal den geplanten Portionen. Nichts muss neu geschrieben werden.</p>':'<p class="muted">Erst Gerichte und Portionen auf die Speisekarte setzen.</p>')+'</section>';
+ // Inventar
+ const inv=ftInv(k);
+ h+='<h2>Inventar für diesen Einsatz</h2><section class="panel">'+(inv.length?'<div class="scroll"><table><thead><tr><th>Gegenstand</th><th>Anzahl</th><th>Ort</th><th>Am '+fd(e.d)+'</th></tr></thead><tbody>'+inv.map(o=>{const r=o.x.res.filter(z=>z.d===e.d),mein=r.some(z=>z.z===v);return '<tr><td>'+esc(o.x.n)+'</td><td>'+o.n+'</td><td>'+esc(o.x.o)+'</td><td>'+(mein?'<span class="chip ok">reserviert</span>':r.length?'<span class="chip warn">belegt: '+esc(r[0].z)+'</span>':o.x.st==='reparatur'?'<span class="chip crit">in Reparatur</span>':'<span class="chip">frei</span>')+'</td></tr>'}).join('')+'</tbody></table></div>'+
+  '<div class="row" style="margin-top:8px"><button class="primary" data-act="ftres">Reservieren und in die Packliste</button></div><p class="muted" style="font-size:13px">Reserviert die Gegenstände für den Tag und schreibt sie in die Packliste des Foodtruck-Vorgangs an diesem Tag.</p>':'<p class="muted">Kommt von selbst aus den Gerichten auf der Speisekarte.</p>')+'</section>';
+ // Kalkulation
+ const ist=p=>istW(v,p),iu=ist('Essen und Foodtruck'),iw=ist('Wareneinsatz Getränke und Essen'),idi=ist('Diesel'),strich=k.gs.reduce((s,x)=>s+(+x.preis||0)*(+x.verk||0),0);
+ h+='<h2>Kalkulation</h2><section class="panel"><div class="scroll"><table><thead><tr><th>Posten</th><th>Plan</th><th>Ist</th></tr></thead><tbody>'+
+  '<tr><td>Verkauf Foodtruck</td><td>'+eur(pl.um)+'</td><td>'+(iu?eur(iu):'<span class="muted">nach der Kasse</span>')+'</td></tr>'+
+  '<tr><td>Wareneinsatz</td><td>– '+eur(pl.we)+'</td><td>'+(iw?'– '+eur(iw):'<span class="muted">Belege eintragen</span>')+'</td></tr>'+
+  '<tr><td>Diesel</td><td><input type="number" step="0.01" min="0" style="width:90px" data-ftk="diesel" value="'+esc(k.diesel)+'" aria-label="Diesel geplant in Euro"></td><td>'+(idi?'– '+eur(idi):'<span class="muted">Tankbeleg eintragen</span>')+'</td></tr>'+
+  '<tr><td><strong>Ergebnis</strong></td><td><strong>'+eur(pl.um-pl.we-pl.die)+'</strong></td><td><strong>'+(iu||iw||idi?eur(iu-iw-idi):'–')+'</strong></td></tr></tbody></table></div>'+
+  (strich?'<p class="muted" style="font-size:13px">Laut Strichliste verkauft: '+eur(strich)+'. Weicht das stark von der Kasse ab, bitte nachzählen.</p>':'')+'</section>';
+ // Einnahmen und Ausgaben
+ const pf={Einnahme:['Essen und Foodtruck','Getränke','Catering (wir bieten an)','Sonstige Einnahmen'],Ausgabe:['Wareneinsatz Getränke und Essen','Diesel','Genehmigungen und Gebühren','PayPal-Gebühren','Sonstige Kosten']};
+ h+='<h2>Einnahmen und Ausgaben</h2><section class="panel">'+(FIN[v].length?'<div class="scroll"><table><thead><tr><th>Art</th><th>Posten</th><th>Betrag</th><th>Herkunft</th></tr></thead><tbody>'+FIN[v].map(x=>'<tr><td><span class="chip'+(x.art==='Einnahme'?' ok':'')+'">'+x.art+'</span></td><td>'+esc(x.p)+'</td><td>'+(x.art==='Ausgabe'?'– ':'')+eur(x.b)+'</td><td class="muted">'+esc(x.q)+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted">Noch keine Einträge.</p>')+
+  '<form class="inline" data-form="fin" data-va="'+i+'"><label>Posten<select id="fi-k-'+i+'">'+['Einnahme','Ausgabe'].map(a=>'<optgroup label="'+a+'n">'+pf[a].map(q=>'<option value="'+a+'|'+esc(q)+'"'+(q==='Diesel'?' selected':'')+'>'+esc(q)+'</option>').join('')+'</optgroup>').join('')+'</select></label><label class="grow">Notiz<input id="fi-p-'+i+'" placeholder="z. B. Tankbeleg Aral"></label><label>Betrag (€)<input id="fi-b-'+i+'" type="number" step="0.01" min="0" required></label><button>Eintragen</button></form></section>';
+ // Kasse
+ const kk=KASSE[v];h+=(kk&&kk.fertig)||S.kasse===v?kasseHtml(v):'<p class="row"><button class="primary" data-act="kopen" data-va="'+i+'">Kasse abrechnen (Barkasse und PayPal POS)</button></p>';
+ // Gerichte
+ h+='<h2>Unsere Gerichte</h2><p class="sub">Einmal anlegen, immer wieder nutzen: Zutaten je Portion und das Inventar, das man dafür braucht.</p>'+GER.map(g=>'<details class="panel" style="margin-bottom:8px"><summary><strong>'+esc(g.n)+'</strong> · üblich '+eur(g.preis)+' · '+g.zut.length+' Zutaten, '+g.inv.length+' Gegenstände</summary>'+
+  '<p style="margin:8px 0 4px"><strong>Zutaten je Portion</strong></p>'+(g.zut.length?'<ul class="list">'+g.zut.map((z,j)=>'<li class="row" style="justify-content:space-between"><span>'+esc(z[0])+': '+menge(z[1])+' '+esc(z[2])+(z[3]?' <span class="muted">(ca. '+eur(z[3])+' je '+esc(z[2])+')</span>':'')+'</span><button class="small" data-act="ftzdel" data-g="'+g.id+'" data-j="'+j+'">Entfernen</button></li>').join('')+'</ul>':'<p class="muted">Noch keine Zutaten.</p>')+
+  '<form class="inline" data-form="ftz" data-g="'+g.id+'"><label class="grow">Zutat<input id="ftz-n-'+g.id+'" required placeholder="z. B. Kartoffeln"></label><label>Menge je Portion<input id="ftz-m-'+g.id+'" type="number" step="0.001" min="0" required style="width:100px"></label><label>Einheit<select id="ftz-e-'+g.id+'">'+['kg','g','l','ml','Stück'].map(x=>'<option>'+x+'</option>').join('')+'</select></label><label>Preis je Einheit (€)<input id="ftz-p-'+g.id+'" type="number" step="0.01" min="0" style="width:100px" placeholder="geschätzt"></label><button>Zutat dazu</button></form>'+
+  '<p style="margin:12px 0 4px"><strong>Inventar</strong></p>'+(g.inv.length?'<ul class="list">'+g.inv.map(([id,n],j)=>{const x=INV.find(y=>y.id===id);return '<li class="row" style="justify-content:space-between"><span>'+esc(x?x.n:'?')+' × '+n+'</span><button class="small" data-act="ftidel" data-g="'+g.id+'" data-j="'+j+'">Entfernen</button></li>'}).join('')+'</ul>':'<p class="muted">Noch nichts.</p>')+
+  '<form class="inline" data-form="fti" data-g="'+g.id+'"><label>Aus dem Inventar<select id="fti-x-'+g.id+'">'+INV.filter(x=>!x.mb&&x.k!=='Fahrzeug').map(x=>'<option value="'+x.id+'">'+esc(x.n)+'</option>').join('')+'</select></label><label>Anzahl<input id="fti-m-'+g.id+'" type="number" min="1" value="1" style="width:80px"></label><button>Dazu</button></form></details>').join('')+
+  '<form class="inline panel" data-form="ftg"><label class="grow">Neues Gericht<input id="ftg-n" required placeholder="z. B. Gemüsecurry mit Reis"></label><label>Üblicher Preis (€)<input id="ftg-p" type="number" step="0.1" min="0" required style="width:100px"></label><label class="check" style="flex-direction:row;color:var(--fg)"><input type="checkbox" id="ftg-auf" checked> gleich auf die Speisekarte</label><button class="primary">Gericht anlegen</button></form>';
+ return h+'</div>'}
 function render(){let v;
  if(!S.me)v=vLogin();
- else v=header()+({start:vStart,bereich:vBereich,aufgabe:vAufgabe,neu:vNeu,kalender:vKalender,inventar:vInventar,einkauf:vEinkauf,finanzen:vFinanzen,gema:vGema,zettel:vZettel,deal:vDeal,vertrag:vVertrag,bericht:vBericht,presse:vPresse,externe:vExterne,zeiten:vZeiten,runde:vRunde,hilfe:vHilfe}[S.view]||vStart)();
+ else v=header()+({start:vStart,bereich:vBereich,aufgabe:vAufgabe,neu:vNeu,kalender:vKalender,inventar:vInventar,einkauf:vEinkauf,finanzen:vFinanzen,gema:vGema,zettel:vZettel,deal:vDeal,vertrag:vVertrag,bericht:vBericht,presse:vPresse,externe:vExterne,zeiten:vZeiten,runde:vRunde,hilfe:vHilfe,foodtruck:vFoodtruck}[S.view]||vStart)();
  $('#app').innerHTML=v;if(S.view==='presse')spDraw()}
 
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el||el.tagName==='SELECT'||el.type==='checkbox')return;
@@ -1100,6 +1163,17 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
  if(act==='login'){S.me=d.p;go('start')}
  else if(act==='logout'){S.me=null;go('login')}
  else if(act==='nav')go(d.v);
+ else if(act==='ftopen')go('foodtruck',{ftv:d.ev!==undefined?+d.ev:S.ftv});
+ else if(act==='ftgdel'){const k=ftk(vaName(E[S.ftv]));k.gs.splice(+d.j,1);render()}
+ else if(act==='ftzdel'){gg(d.g).zut.splice(+d.j,1);render()}
+ else if(act==='ftidel'){gg(d.g).inv.splice(+d.j,1);render()}
+ else if(act==='ftek'){const e=E[S.ftv],v=vaName(e),k=ftk(v);for(let x=EK.length-1;x>=0;x--)if(EK[x].quelle==='Foodtruck'&&EK[x].va===v)EK.splice(x,1);
+  const z=ftZut(k);z.forEach(t=>EK.push({id:ekId++,n:t.n,m:Math.round(t.m*100)/100,e:t.e,grund:'Foodtruck: '+v,quelle:'Foodtruck',va:v,o:'',von:S.me,am:now().split(',')[0]}));
+  const neu=!k.ek;k.ek=now();toast((neu?'Auf die Einkaufsliste: ':'Einkaufsliste aktualisiert: ')+z.length+' Zutaten.');render()}
+ else if(act==='ftres'){const e=E[S.ftv],v=vaName(e),k=ftk(v),inv=ftInv(k);let r=0,pk=0;
+  inv.forEach(o=>{if(!o.x.res.some(z=>z.d===e.d&&z.z===v)){o.x.res.push({d:e.d,z:v,p:S.me});r++}});
+  A.filter(t=>t.b==='ft'&&t.pack&&t.frist===e.d).forEach(t=>inv.forEach(o=>{if(!t.pack.some(q=>q.t===o.x.n)){t.pack.push({t:o.x.n+(o.n>1?' × '+o.n:''),ok:false});pk++}}));
+  k.res=now();toast(r+' reserviert, '+pk+' in die Packliste.');render()}
  else if(act==='bell'){S.bell=!S.bell;render()}
  else if(act==='bereich')go('bereich',{b:d.b,tab:'aufgaben'});
  else if(act==='aufgabe')go('aufgabe',{a:+d.id});
@@ -1174,6 +1248,8 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
  else if(act==='neueVorlage'){VL.push({id:VL.length+1,b:d.b,name:'Ablauf '+bb(d.b).name,items:[]});S.tab='ablaeufe';render()}
 });
 document.addEventListener('change',e=>{const el=e.target,d=el.dataset,a=S.a&&A.find(x=>x.id===S.a);
+ if(d.act==='ftwahl'){S.ftv=+el.value;S.kasse=null;render();return}
+ if(d.ftk){const k=ftk(vaName(E[S.ftv]));if(d.ftk==='diesel')k.diesel=el.value;else k.gs[+d.j][d.ftk]=el.value;render();return}
  if(d.act==='fs'&&a){if(el.value==='erledigt'&&a.erl==='autor'&&S.me!==(a.ersteller||a.p)){toast('Abhaken darf nur '+pn(a.ersteller||a.p)+'.');render();return}if(el.value==='erledigt'&&a.erl==='jeder'){toast('Hier hakt jede Person für sich ab, siehe unten.');render();return}a.fs=el.value;logA(a,'Fortschritt: '+FS[el.value]);toast('Fortschritt: '+FS[el.value]);render()}
  else if(d.act==='ks'&&a){a.ks=el.value==='–'?'':el.value;logA(a,'Kostenstelle: '+el.value);toast('Kostenstelle gespeichert.');render()}
  else if(d.act==='pack'&&a){a.pack[+d.i].ok=el.checked;render()}
@@ -1238,6 +1314,12 @@ document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.d
   if(am.length>=x.m){S.invMsg='<strong>Schon belegt:</strong> '+esc(x.n)+' ist am '+fd(dd)+' reserviert für „'+esc(am[0].z)+'“. Sprich dich mit '+esc(pn(am[0].p))+' ab.';render()}
   else{x.res.push({d:dd,z,p:S.me});S.invMsg='';toast('Reserviert: '+x.n+', '+fd(dd)+'.');render()}}
  else if(d.form==='absage'){a.fs='abgesagt';a.grund=(val('ab-g')||'').trim();logA(a,a.grund?'Abgesagt: '+a.grund:'Abgesagt');S.form='';toast('Abgesagt. Steht jetzt in der Übersicht für die Runde.');render()}
+ else if(d.form==='ftadd'){const k=ftk(vaName(E[S.ftv])),g=gg(val('ft-add'));if(!g)return;k.gs.push({g:g.id,preis:g.preis,port:val('ft-port')||'',verk:''});toast(g.n+' steht auf der Speisekarte.');render()}
+ else if(d.form==='ftg'){const n=(val('ftg-n')||'').trim();if(!n)return;const g={id:gid++,n,preis:+val('ftg-p')||0,zut:[],inv:[]};GER.push(g);
+  if(document.getElementById('ftg-auf').checked&&E[S.ftv])ftk(vaName(E[S.ftv])).gs.push({g:g.id,preis:g.preis,port:'',verk:''});
+  toast('Gericht angelegt. Jetzt die Zutaten je Portion und das Inventar eintragen.');render();const el=[...document.querySelectorAll('details')].pop();if(el)el.open=true}
+ else if(d.form==='ftz'){const g=gg(d.g);g.zut.push([val('ftz-n-'+g.id).trim(),+val('ftz-m-'+g.id)||0,val('ftz-e-'+g.id),+val('ftz-p-'+g.id)||0]);toast('Zutat ergänzt.');render();const el=[...document.querySelectorAll('details')].find(x=>x.querySelector('[data-g="'+g.id+'"]'));if(el)el.open=true}
+ else if(d.form==='fti'){const g=gg(d.g),id=+val('fti-x-'+g.id),n=+val('fti-m-'+g.id)||1,f=g.inv.find(x=>x[0]===id);if(f)f[1]=n;else g.inv.push([id,n]);toast('Inventar ergänzt.');render();const el=[...document.querySelectorAll('details')].find(x=>x.querySelector('[data-g="'+g.id+'"]'));if(el)el.open=true}
  else if(d.form==='packneu'&&a){const t=(val('pk-t')||'').trim();if(!t)return;a.pack.push({t,ok:false});logA(a,'Packliste ergänzt: '+t);
   const cb=document.getElementById('pk-v'),v=a.vl&&VL.find(y=>y.id===a.vl);let m='Zur Packliste hinzugefügt.';
   if(cb&&cb.checked&&v&&!v.items.some(i=>i.typ==='Packliste'&&i.t===t)){v.items.push({typ:'Packliste',t,von:S.me});m='Hinzugefügt, auch in der Vorlage „'+v.name+'“.'}
