@@ -1170,7 +1170,7 @@ document.addEventListener('input',e=>{const el=e.target,d=el.dataset;
 document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.dataset,a=S.a&&A.find(x=>x.id===S.a),val=id=>(document.getElementById(id)||{}).value;
  if(d.form==='zx'){const u=val('zx-u'),t=(val('zx-t')||'').trim();if(!u||!t)return;dl(E[+d.ev]).zx.push({u,t});render()}
  else if(d.form==='kopie'){const e=E[+d.ev],n=Math.min(12,Math.max(1,+val('ko-n')||1)),art=val('ko-a'),st=val('ko-d');if(!st)return;const ds=art==='einmal'?[st]:serie(st,art,n),vl=VL.find(x=>x.id===+val('ko-v')),r=document.getElementById('ko-r');
-  const k=kopiere(e,ds,r?r.checked:false,vl);toast(k?k+' Termin'+(k>1?'e':'')+' angelegt: '+ds.map(fd).join(', ')+(vl?'. Aufgaben aus „'+vl.name+'“ sind dabei.':'.'):'Diese Termine gibt es schon.');render()}
+  const k=kopiere(e,ds,r?r.checked:false,vl);toast(k?k+' Termin'+(k>1?'e':'')+' angelegt: '+ds.map(fd).join(', ')+(vl?' Aufgaben aus „'+vl.name+'“ sind dabei.':''):'Diese Termine gibt es schon.');render()}
  else if(d.form==='ffneu'){const n=(val('ff-n')||'').trim();if(n&&!FF.includes(n))FF.push(n);toast('Freifeld „'+n+'“ gibt es jetzt bei allen Terminen und als Platzhalter im Vertrag.');render()}
  else if(d.form==='vorl'){VORL[d.k].t=val('vo-t');S.form='';toast('Vorlage gespeichert.');render()}
  else if(d.form==='verein'){VEREIN.anschrift=(val('ve-a')||'').trim();toast('Anschrift gespeichert.');render()}
