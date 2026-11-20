@@ -233,11 +233,16 @@ const INV=[
 INV.push({id:12,k:'Geschirr und Gläser',n:'Einwegbecher (Verbrauch)',m:200,mb:150,o:'Küche, Regal 2',res:[]});
 INV.push({id:13,k:'Geschirr und Gläser',n:'Pommesschalen (Verbrauch)',m:170,mb:150,o:'Foodtruck, Fach unten',res:[]});
 INV.push({id:14,k:'Küche',n:'Friteuse',m:1,o:'Foodtruck',res:[]},{id:15,k:'Küche',n:'Kochtopf 10 l',m:2,o:'Küche, Regal 1',res:[]},{id:16,k:'Küche',n:'Löffel, Kellen und Zangen (Kiste)',m:1,o:'Foodtruck, Schublade',res:[]});
-// Gerichte des Foodtrucks: einmal anlegen, immer wieder nutzen. Zutaten je Portion: [Zutat, Menge, Einheit, Preis je Einheit (geschätzt)]
+// Gerichte des Foodtrucks: einmal anlegen, immer wieder nutzen.
+// Zutat je Portion: {n, m, e} (Menge und Einheit) oder {n, ppp} (eine Packung reicht für ppp Portionen)
 const GER=[
- {id:1,n:'Pommes',preis:3.5,zut:[['Pommes (TK)',0.2,'kg',2.8],['Frittierfett',0.03,'l',3.5],['Pommesschalen',1,'Stück',0.05]],inv:[[14,1],[16,1]]},
- {id:2,n:'Linsensuppe mit Brot',preis:4,zut:[['Rote Linsen',0.08,'kg',3.2],['Zwiebeln',0.05,'kg',1.8],['Möhren',0.05,'kg',1.5],['Gemüsebrühe',0.3,'l',0.6],['Brot',1,'Stück',0.4]],inv:[[15,1],[16,1]]},
- {id:3,n:'Falafel im Brot',preis:5,zut:[['Falafel (TK)',5,'Stück',0.25],['Fladenbrot',1,'Stück',0.6],['Salat und Tomaten',0.05,'kg',4],['Sesamsoße',0.03,'l',8]],inv:[[14,1],[16,1]]}];
+ {id:1,n:'Pommes',preis:3.5,zut:[{n:'Pommes (TK)',ppp:12},{n:'Frittierfett',m:0.03,e:'l'},{n:'Pommesschalen',m:1,e:'Stück'}],inv:[[14,1],[16,1]]},
+ {id:2,n:'Linsensuppe mit Brot',preis:4,zut:[{n:'Rote Linsen',m:80,e:'g'},{n:'Zwiebeln',m:50,e:'g'},{n:'Möhren',m:50,e:'g'},{n:'Gemüsebrühe',m:0.3,e:'l'},{n:'Brot',m:1,e:'Stück'}],inv:[[15,1],[16,1]]},
+ {id:3,n:'Falafel im Brot',preis:5,zut:[{n:'Falafel (TK)',m:5,e:'Stück'},{n:'Fladenbrot',m:1,e:'Stück'},{n:'Salat und Tomaten',m:50,e:'g'},{n:'Sesamsoße',m:30,e:'ml'}],inv:[[14,1],[16,1]]}];
+// Einkaufspreise je Zutat: pe = je kg | je l | je Stück | je Packung (dann Inhalt inh in inhE)
+const ZP={'Pommes (TK)':{pe:'Packung',preis:7.5,inh:2.5,inhE:'kg'},'Frittierfett':{pe:'Packung',preis:9,inh:3,inhE:'l'},'Pommesschalen':{pe:'Packung',preis:5,inh:100,inhE:'Stück'},
+ 'Rote Linsen':{pe:'kg',preis:3.2},'Zwiebeln':{pe:'kg',preis:1.8},'Möhren':{pe:'kg',preis:1.5},'Gemüsebrühe':{pe:'l',preis:0.6},'Brot':{pe:'Stück',preis:0.4},
+ 'Falafel (TK)':{pe:'Packung',preis:6,inh:50,inhE:'Stück'},'Fladenbrot':{pe:'Stück',preis:0.6},'Salat und Tomaten':{pe:'kg',preis:4},'Sesamsoße':{pe:'Packung',preis:3,inh:0.5,inhE:'l'}};
 let gid=4;
 const FTK={'Nachbarschaftsfest mit Foodtruck (Sa 28.11.)':{gs:[{g:1,preis:3.5,port:80,verk:''},{g:2,preis:4,port:40,verk:''}],ek:null,res:null,diesel:25}};
 const PREIS={2:1200,5:45,7:110,8:900,9:150,10:350,11:0.12,12:0.08,13:0.05};
@@ -1107,10 +1112,28 @@ function menge(m){return (+m||0).toLocaleString('de-DE',{maximumFractionDigits:2
 function ftEvents(){return E.filter(e=>e.b==='ft'&&e.cal==='va').sort((a,b)=>a.d<b.d?-1:1)}
 function ftk(v){return FTK[v]||(FTK[v]={gs:[],ek:null,res:null,diesel:''})}
 function gg(id){return GER.find(g=>g.id===+id)}
-function ftZut(k){const m={};k.gs.forEach(x=>{const g=gg(x.g);if(!g)return;g.zut.forEach(([n,mg,e,pr])=>{const key=n+'|'+e;if(!m[key])m[key]={n,e,m:0,pr:+pr||0};m[key].m+=mg*(+x.port||0)})});return Object.values(m).filter(z=>z.m>0)}
+const BASIS={kg:['kg',1],g:['kg',0.001],l:['l',1],ml:['l',0.001],'Stück':['Stück',1]};
+function zutTxt(z){if(z.ppp){const p=ZP[z.n];return '1 Packung'+(p&&p.pe==='Packung'&&p.inh?' ('+menge(p.inh)+' '+p.inhE+')':'')+' reicht für '+menge(z.ppp)+' Portionen'}return menge(z.m)+' '+z.e+' je Portion'}
+function zpTxt(n){const p=ZP[n];if(!p||!p.preis)return '';return eur(p.preis)+' je '+(p.pe==='Packung'?'Packung'+(p.inh?' ('+menge(p.inh)+' '+p.inhE+')':''):p.pe)}
+function ftZut(k){const m={};k.gs.forEach(x=>{const g=gg(x.g),por=+x.port||0;if(!g||!por)return;g.zut.forEach(z=>{const p=ZP[z.n];let q,u;
+  if(z.ppp){if(p&&p.pe==='Packung'&&p.inh){q=por/z.ppp*p.inh;u=p.inhE}else{q=por/z.ppp;u='Packung'}}
+  else{const b=BASIS[z.e]||[z.e,1];q=(+z.m||0)*b[1]*por;u=b[0]}
+  const key=z.n+'|'+u;if(!m[key])m[key]={n:z.n,u,q:0};m[key].q+=q})});
+ return Object.values(m).filter(z=>z.q>0).map(z=>{const p=ZP[z.n]||{},hat=!!p.preis;let kauf=null,kosten=null,warn='';
+  const pk=st=>({m:st,e:(st===1?'Packung':'Packungen')+(p.inh?' à '+menge(p.inh)+' '+p.inhE:'')});
+  if(z.u==='Packung'){const st=Math.ceil(z.q-1e-9);kauf=pk(st);if(hat)kosten=st*p.preis}
+  else if(p.pe==='Packung'){if(p.inh&&p.inhE===z.u){const st=Math.ceil(z.q/p.inh-1e-9);kauf=pk(st);if(hat)kosten=st*p.preis}else warn='Packungsinhalt fehlt oder Einheit passt nicht'}
+  else{kauf={m:Math.round(z.q*100)/100,e:z.u};if(hat){if(p.pe===z.u)kosten=z.q*p.preis;else warn='Preis je '+p.pe+', gebraucht in '+z.u}}
+  if(!hat&&!warn)warn='Preis fehlt';
+  return Object.assign(z,{kauf,kosten,warn})})}
 function ftInv(k){const m={};k.gs.forEach(x=>{const g=gg(x.g);if(!g)return;g.inv.forEach(([id,n])=>{m[id]=Math.max(m[id]||0,n)})});return Object.keys(m).map(id=>({x:INV.find(i=>i.id===+id),n:m[id]})).filter(o=>o.x)}
-function ftPlan(k){const um=k.gs.reduce((s,x)=>s+(+x.preis||0)*(+x.port||0),0),we=ftZut(k).reduce((s,z)=>s+z.m*z.pr,0);return {um,we,die:+k.diesel||0}}
+function ftPlan(k){const um=k.gs.reduce((s,x)=>s+(+x.preis||0)*(+x.port||0),0),we=ftZut(k).reduce((s,z)=>s+(z.kosten||0),0);return {um,we,die:+k.diesel||0}}
 function ftNeuVa(e){const v=vaName(e);if(!FIN[v]){FIN[v]=[];VERANST.splice(Math.max(0,VERANST.length-1),0,v)}return v}
+function zpForm(n,key){const p=ZP[n]||{pe:'kg',preis:'',inh:'',inhE:'kg'},o=(arr,sel)=>arr.map(x=>'<option'+(x===sel?' selected':'')+'>'+x+'</option>').join('');
+ return '<form class="inline" data-form="zp" data-n="'+esc(n)+'" data-k="'+key+'" style="margin:6px 0 10px"><label>Einkaufspreis (€)<input id="zp-p-'+key+'" type="number" step="0.01" min="0" required style="width:100px" value="'+esc(p.preis)+'"></label>'+
+ '<label>je<select id="zp-e-'+key+'" data-act="zpe" data-k="'+key+'">'+o(['kg','l','Stück','Packung'],p.pe)+'</select></label>'+
+ '<span id="zp-pk-'+key+'" class="row"'+(p.pe==='Packung'?'':' style="display:none"')+'><label>Inhalt der Packung<input id="zp-i-'+key+'" type="number" step="0.001" min="0" style="width:90px" value="'+esc(p.inh||'')+'" placeholder="z. B. 2,5"></label><label>Einheit<select id="zp-ie-'+key+'">'+o(['kg','l','Stück'],p.inhE||'kg')+'</select></label></span>'+
+ '<button class="primary">Preis speichern</button></form>'}
 function vFoodtruck(){if(!canFt())return '<div class="wrap"><h1>Foodtruck</h1><div class="box"><p>Diese Seite sehen die Leute aus dem Bereich Foodtruck und Finanzen.</p></div></div>';
  const evs=ftEvents();if(!evs.length)return '<div class="wrap"><h1>Foodtruck</h1><p class="muted">Noch keine Foodtruck-Termine im Kalender.</p></div>';
  let e=E[S.ftv];if(!e||e.b!=='ft')e=evs.find(x=>x.d>=HEUTE)||evs[evs.length-1];S.ftv=e.i;
@@ -1125,8 +1148,9 @@ function vFoodtruck(){if(!canFt())return '<div class="wrap"><h1>Foodtruck</h1><d
   (frei.length?'<form class="inline" data-form="ftadd"><label>Gericht<select id="ft-add">'+frei.map(g=>'<option value="'+g.id+'">'+esc(g.n)+' ('+eur(g.preis)+')</option>').join('')+'</select></label><label>Portionen<input id="ft-port" type="number" min="0" style="width:90px" placeholder="z. B. 50"></label><button>Auf die Speisekarte</button></form>':'')+'</section>';
  // Einkaufsliste
  const zut=ftZut(k);
- h+='<h2>Einkaufsliste für diesen Einsatz</h2><section class="panel">'+(zut.length?'<div class="scroll"><table><thead><tr><th>Zutat</th><th>Menge</th><th>geschätzt</th></tr></thead><tbody>'+zut.map(z=>'<tr><td>'+esc(z.n)+'</td><td>'+menge(z.m)+' '+esc(z.e)+'</td><td>'+(z.pr?eur(z.m*z.pr):'–')+'</td></tr>').join('')+'<tr><td colspan="2"><strong>Wareneinsatz geschätzt</strong></td><td><strong>'+eur(pl.we)+'</strong></td></tr></tbody></table></div>'+
-  '<div class="row" style="margin-top:8px"><button class="primary" data-act="ftek">'+(k.ek?'Einkaufsliste aktualisieren':'Auf die Einkaufsliste')+'</button>'+(k.ek?'<span class="chip ok">übernommen '+esc(k.ek)+'</span>':'')+'</div><p class="muted" style="font-size:13px">Die Mengen rechnet die App aus den Zutaten je Portion mal den geplanten Portionen. Nichts muss neu geschrieben werden.</p>':'<p class="muted">Erst Gerichte und Portionen auf die Speisekarte setzen.</p>')+'</section>';
+ h+='<h2>Einkaufsliste für diesen Einsatz</h2><section class="panel">'+(zut.length?'<div class="scroll"><table><thead><tr><th>Zutat</th><th>Gebraucht</th><th>Kaufen</th><th>Einkaufspreis</th><th>Kosten</th></tr></thead><tbody>'+zut.map((z,j)=>{const f='zp-e'+j;
+  return '<tr><td>'+esc(z.n)+'</td><td>'+menge(z.q)+' '+esc(z.u)+'</td><td>'+(z.kauf?menge(z.kauf.m)+' '+esc(z.kauf.e):'–')+'</td><td>'+(zpTxt(z.n)?esc(zpTxt(z.n))+' ':'')+'<button class="small'+(z.warn==='Preis fehlt'?' primary':'')+'" data-act="form" data-f="'+f+'">'+(zpTxt(z.n)?'Ändern':'Preis eintragen')+'</button></td><td>'+(z.kosten!=null?eur(z.kosten):'<span class="chip warn">'+esc(z.warn)+'</span>')+'</td></tr>'}).join('')+'<tr><td colspan="4"><strong>Wareneinsatz geschätzt</strong></td><td><strong>'+eur(pl.we)+'</strong></td></tr></tbody></table></div>'+zut.map((z,j)=>S.form==='zp-e'+j?'<div class="box" id="zp-box" style="margin-top:10px"><p style="margin:0"><strong>Einkaufspreis: '+esc(z.n)+'</strong></p>'+zpForm(z.n,'zp-e'+j)+'</div>':'').join('')+
+  '<div class="row" style="margin-top:8px"><button class="primary" data-act="ftek">'+(k.ek?'Einkaufsliste aktualisieren':'Auf die Einkaufsliste')+'</button>'+(k.ek?'<span class="chip ok">übernommen '+esc(k.ek)+'</span>':'')+'</div><p class="muted" style="font-size:13px">Die App rechnet aus den Gerichten mal den Portionen, was gebraucht wird. Packungen rundet sie auf, der Rest bleibt für das nächste Mal. Einkaufspreise gelten für alle Gerichte und Einsätze.</p>':'<p class="muted">Erst Gerichte und Portionen auf die Speisekarte setzen.</p>')+'</section>';
  // Inventar
  const inv=ftInv(k);
  h+='<h2>Inventar für diesen Einsatz</h2><section class="panel">'+(inv.length?'<div class="scroll"><table><thead><tr><th>Gegenstand</th><th>Anzahl</th><th>Ort</th><th>Am '+fd(e.d)+'</th></tr></thead><tbody>'+inv.map(o=>{const r=o.x.res.filter(z=>z.d===e.d),mein=r.some(z=>z.z===v);return '<tr><td>'+esc(o.x.n)+'</td><td>'+o.n+'</td><td>'+esc(o.x.o)+'</td><td>'+(mein?'<span class="chip ok">reserviert</span>':r.length?'<span class="chip warn">belegt: '+esc(r[0].z)+'</span>':o.x.st==='reparatur'?'<span class="chip crit">in Reparatur</span>':'<span class="chip">frei</span>')+'</td></tr>'}).join('')+'</tbody></table></div>'+
@@ -1147,11 +1171,11 @@ function vFoodtruck(){if(!canFt())return '<div class="wrap"><h1>Foodtruck</h1><d
  const kk=KASSE[v];h+=(kk&&kk.fertig)||S.kasse===v?kasseHtml(v):'<p class="row"><button class="primary" data-act="kopen" data-va="'+i+'">Kasse abrechnen (Barkasse und PayPal POS)</button></p>';
  // Gerichte
  h+='<h2>Unsere Gerichte</h2><p class="sub">Einmal anlegen, immer wieder nutzen: Zutaten je Portion und das Inventar, das man dafür braucht.</p>'+GER.map(g=>'<details class="panel" style="margin-bottom:8px"><summary><strong>'+esc(g.n)+'</strong> · üblich '+eur(g.preis)+' · '+g.zut.length+' Zutaten, '+g.inv.length+' Gegenstände</summary>'+
-  '<p style="margin:8px 0 4px"><strong>Zutaten je Portion</strong></p>'+(g.zut.length?'<ul class="list">'+g.zut.map((z,j)=>'<li class="row" style="justify-content:space-between"><span>'+esc(z[0])+': '+menge(z[1])+' '+esc(z[2])+(z[3]?' <span class="muted">(ca. '+eur(z[3])+' je '+esc(z[2])+')</span>':'')+'</span><button class="small" data-act="ftzdel" data-g="'+g.id+'" data-j="'+j+'">Entfernen</button></li>').join('')+'</ul>':'<p class="muted">Noch keine Zutaten.</p>')+
-  '<form class="inline" data-form="ftz" data-g="'+g.id+'"><label class="grow">Zutat<input id="ftz-n-'+g.id+'" required placeholder="z. B. Kartoffeln"></label><label>Menge je Portion<input id="ftz-m-'+g.id+'" type="number" step="0.001" min="0" required style="width:100px"></label><label>Einheit<select id="ftz-e-'+g.id+'">'+['kg','g','l','ml','Stück'].map(x=>'<option>'+x+'</option>').join('')+'</select></label><label>Preis je Einheit (€)<input id="ftz-p-'+g.id+'" type="number" step="0.01" min="0" style="width:100px" placeholder="geschätzt"></label><button>Zutat dazu</button></form>'+
+  '<p style="margin:8px 0 4px"><strong>Zutaten je Portion</strong></p>'+(g.zut.length?'<ul class="list">'+g.zut.map((z,j)=>{const f='zp-g'+g.id+'-'+j;return '<li style="display:block"><div class="row" style="justify-content:space-between"><span>'+esc(z.n)+': '+esc(zutTxt(z))+' <span class="muted">· '+(zpTxt(z.n)?esc(zpTxt(z.n)):'<span class="chip warn">Preis fehlt</span>')+'</span></span><span class="row"><button class="small" data-act="form" data-f="'+f+'">Einkaufspreis</button><button class="small" data-act="ftzdel" data-g="'+g.id+'" data-j="'+j+'">Entfernen</button></span></div>'+(S.form===f?zpForm(z.n,f):'')+'</li>'}).join('')+'</ul>':'<p class="muted">Noch keine Zutaten.</p>')+
+  '<form class="inline" data-form="ftz" data-g="'+g.id+'"><label class="grow">Zutat<input id="ftz-n-'+g.id+'" required list="zp-liste" placeholder="z. B. Kartoffeln"></label><label>Menge je Portion<input id="ftz-m-'+g.id+'" type="number" step="0.001" min="0" style="width:100px"></label><label>Einheit<select id="ftz-e-'+g.id+'">'+['g','kg','ml','l','Stück'].map(x=>'<option>'+x+'</option>').join('')+'</select></label><label>oder: 1 Packung reicht für … Portionen<input id="ftz-ppp-'+g.id+'" type="number" step="1" min="1" style="width:110px" placeholder="z. B. 12"></label><button>Zutat dazu</button></form>'+
   '<p style="margin:12px 0 4px"><strong>Inventar</strong></p>'+(g.inv.length?'<ul class="list">'+g.inv.map(([id,n],j)=>{const x=INV.find(y=>y.id===id);return '<li class="row" style="justify-content:space-between"><span>'+esc(x?x.n:'?')+' × '+n+'</span><button class="small" data-act="ftidel" data-g="'+g.id+'" data-j="'+j+'">Entfernen</button></li>'}).join('')+'</ul>':'<p class="muted">Noch nichts.</p>')+
   '<form class="inline" data-form="fti" data-g="'+g.id+'"><label>Aus dem Inventar<select id="fti-x-'+g.id+'">'+INV.filter(x=>!x.mb&&x.k!=='Fahrzeug').map(x=>'<option value="'+x.id+'">'+esc(x.n)+'</option>').join('')+'</select></label><label>Anzahl<input id="fti-m-'+g.id+'" type="number" min="1" value="1" style="width:80px"></label><button>Dazu</button></form></details>').join('')+
-  '<form class="inline panel" data-form="ftg"><label class="grow">Neues Gericht<input id="ftg-n" required placeholder="z. B. Gemüsecurry mit Reis"></label><label>Üblicher Preis (€)<input id="ftg-p" type="number" step="0.1" min="0" required style="width:100px"></label><label class="check" style="flex-direction:row;color:var(--fg)"><input type="checkbox" id="ftg-auf" checked> gleich auf die Speisekarte</label><button class="primary">Gericht anlegen</button></form>';
+  '<datalist id="zp-liste">'+Object.keys(ZP).map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist><form class="inline panel" data-form="ftg"><label class="grow">Neues Gericht<input id="ftg-n" required placeholder="z. B. Gemüsecurry mit Reis"></label><label>Üblicher Preis (€)<input id="ftg-p" type="number" step="0.1" min="0" required style="width:100px"></label><label class="check" style="flex-direction:row;color:var(--fg)"><input type="checkbox" id="ftg-auf" checked> gleich auf die Speisekarte</label><button class="primary">Gericht anlegen</button></form>';
  return h+'</div>'}
 function render(){let v;
  if(!S.me)v=vLogin();
@@ -1168,7 +1192,7 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
  else if(act==='ftzdel'){gg(d.g).zut.splice(+d.j,1);render()}
  else if(act==='ftidel'){gg(d.g).inv.splice(+d.j,1);render()}
  else if(act==='ftek'){const e=E[S.ftv],v=vaName(e),k=ftk(v);for(let x=EK.length-1;x>=0;x--)if(EK[x].quelle==='Foodtruck'&&EK[x].va===v)EK.splice(x,1);
-  const z=ftZut(k);z.forEach(t=>EK.push({id:ekId++,n:t.n,m:Math.round(t.m*100)/100,e:t.e,grund:'Foodtruck: '+v,quelle:'Foodtruck',va:v,o:'',von:S.me,am:now().split(',')[0]}));
+  const z=ftZut(k);z.forEach(t=>EK.push({id:ekId++,n:t.n,m:t.kauf?t.kauf.m:Math.round(t.q*100)/100,e:t.kauf?t.kauf.e:t.u,grund:'Foodtruck: '+v+(t.kosten!=null?' · ca. '+eur(t.kosten):''),quelle:'Foodtruck',va:v,o:'',von:S.me,am:now().split(',')[0]}));
   const neu=!k.ek;k.ek=now();toast((neu?'Auf die Einkaufsliste: ':'Einkaufsliste aktualisiert: ')+z.length+' Zutaten.');render()}
  else if(act==='ftres'){const e=E[S.ftv],v=vaName(e),k=ftk(v),inv=ftInv(k);let r=0,pk=0;
   inv.forEach(o=>{if(!o.x.res.some(z=>z.d===e.d&&z.z===v)){o.x.res.push({d:e.d,z:v,p:S.me});r++}});
@@ -1248,6 +1272,7 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
  else if(act==='neueVorlage'){VL.push({id:VL.length+1,b:d.b,name:'Ablauf '+bb(d.b).name,items:[]});S.tab='ablaeufe';render()}
 });
 document.addEventListener('change',e=>{const el=e.target,d=el.dataset,a=S.a&&A.find(x=>x.id===S.a);
+ if(d.act==='zpe'){const sp=document.getElementById('zp-pk-'+d.k);if(sp)sp.style.display=el.value==='Packung'?'':'none';return}
  if(d.act==='ftwahl'){S.ftv=+el.value;S.kasse=null;render();return}
  if(d.ftk){const k=ftk(vaName(E[S.ftv]));if(d.ftk==='diesel')k.diesel=el.value;else k.gs[+d.j][d.ftk]=el.value;render();return}
  if(d.act==='fs'&&a){if(el.value==='erledigt'&&a.erl==='autor'&&S.me!==(a.ersteller||a.p)){toast('Abhaken darf nur '+pn(a.ersteller||a.p)+'.');render();return}if(el.value==='erledigt'&&a.erl==='jeder'){toast('Hier hakt jede Person für sich ab, siehe unten.');render();return}a.fs=el.value;logA(a,'Fortschritt: '+FS[el.value]);toast('Fortschritt: '+FS[el.value]);render()}
@@ -1318,8 +1343,14 @@ document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.d
  else if(d.form==='ftg'){const n=(val('ftg-n')||'').trim();if(!n)return;const g={id:gid++,n,preis:+val('ftg-p')||0,zut:[],inv:[]};GER.push(g);
   if(document.getElementById('ftg-auf').checked&&E[S.ftv])ftk(vaName(E[S.ftv])).gs.push({g:g.id,preis:g.preis,port:'',verk:''});
   toast('Gericht angelegt. Jetzt die Zutaten je Portion und das Inventar eintragen.');render();const el=[...document.querySelectorAll('details')].pop();if(el)el.open=true}
- else if(d.form==='ftz'){const g=gg(d.g);g.zut.push([val('ftz-n-'+g.id).trim(),+val('ftz-m-'+g.id)||0,val('ftz-e-'+g.id),+val('ftz-p-'+g.id)||0]);toast('Zutat ergänzt.');render();const el=[...document.querySelectorAll('details')].find(x=>x.querySelector('[data-g="'+g.id+'"]'));if(el)el.open=true}
+ else if(d.form==='ftz'){const g=gg(d.g),n=val('ftz-n-'+g.id).trim(),ppp=+val('ftz-ppp-'+g.id)||0,m=+val('ftz-m-'+g.id)||0;if(!n)return;
+  if(!ppp&&!m){toast('Bitte die Menge je Portion oder die Portionen je Packung eintragen.');return}
+  g.zut.push(ppp?{n,ppp}:{n,m,e:val('ftz-e-'+g.id)});if(ppp&&!ZP[n])ZP[n]={pe:'Packung',preis:'',inh:'',inhE:'kg'};
+  toast(ZP[n]&&ZP[n].preis?'Zutat ergänzt.':'Zutat ergänzt. Jetzt noch den Einkaufspreis eintragen.');render();const el=[...document.querySelectorAll('details')].find(x=>x.querySelector('[data-g="'+g.id+'"]'));if(el)el.open=true}
  else if(d.form==='fti'){const g=gg(d.g),id=+val('fti-x-'+g.id),n=+val('fti-m-'+g.id)||1,f=g.inv.find(x=>x[0]===id);if(f)f[1]=n;else g.inv.push([id,n]);toast('Inventar ergänzt.');render();const el=[...document.querySelectorAll('details')].find(x=>x.querySelector('[data-g="'+g.id+'"]'));if(el)el.open=true}
+ else if(d.form==='zp'){const n=d.n,key=d.k,pe=val('zp-e-'+key),preis=+val('zp-p-'+key)||0,inh=+val('zp-i-'+key)||0;
+  if(pe==='Packung'&&!inh){toast('Bitte eintragen, was in einer Packung ist (kg, Liter oder Stück).');return}
+  ZP[n]={pe,preis,inh:pe==='Packung'?inh:'',inhE:pe==='Packung'?val('zp-ie-'+key):''};S.form='';toast('Einkaufspreis gespeichert: '+zpTxt(n)+'. Gilt für alle Gerichte.');render()}
  else if(d.form==='packneu'&&a){const t=(val('pk-t')||'').trim();if(!t)return;a.pack.push({t,ok:false});logA(a,'Packliste ergänzt: '+t);
   const cb=document.getElementById('pk-v'),v=a.vl&&VL.find(y=>y.id===a.vl);let m='Zur Packliste hinzugefügt.';
   if(cb&&cb.checked&&v&&!v.items.some(i=>i.typ==='Packliste'&&i.t===t)){v.items.push({typ:'Packliste',t,von:S.me});m='Hinzugefügt, auch in der Vorlage „'+v.name+'“.'}
