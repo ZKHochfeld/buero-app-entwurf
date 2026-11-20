@@ -438,6 +438,7 @@ function vStart(){const me=S.me,mine=B.filter(b=>isMem(b.id,me));
  const today=E.filter(e=>e.d===HEUTE);
  let h='<div class="wrap"><p class="sub">'+fd(HEUTE)+'2026</p><h1>Hallo '+esc(pn(me))+'</h1>';
  h+='<div class="row" style="margin-top:6px"><span class="muted">Meine Bereiche:</span>'+(mine.length?mine.map(b=>'<button class="chip" data-act="bereich" data-b="'+b.id+'">'+esc(b.name)+'</button>').join(''):'<span class="muted">noch keiner. Unten einen Bereich öffnen und beitreten.</span>')+'</div>';
+ h+=topfHtml();
  h+='<div class="cols" style="margin-top:14px"><section class="panel"><h3>Meine Aufgaben ('+my.length+')</h3>'+(my.length?'<ul class="list">'+my.map(a=>aItem(a,true)).join('')+'</ul>':'<p class="muted">Keine offenen Aufgaben.</p>')+'</section>';
  h+='<div style="display:flex;flex-direction:column;gap:14px;min-width:0"><section class="panel"><h3>Anfragen an mich ('+(req.length+vreq.length+hreq.length)+')</h3>'+(hreq.length?'<ul class="list">'+hreq.map(r=>'<li><div class="main"><button class="link" data-act="aufgabe" data-id="'+r.a.id+'">Hilfe: '+esc(r.a.t)+'</button><div class="muted" style="font-size:13px">'+esc(pn(r.x.von))+': „'+esc(r.x.t)+'“</div></div><div class="row"><button class="small primary" data-act="hilfe" data-id="'+r.a.id+'" data-i="'+r.i+'" data-z="hilft">Ich helfe</button><button class="small" data-act="hilfe" data-id="'+r.a.id+'" data-i="'+r.i+'" data-z="nein">Kann gerade nicht</button></div></li>').join('')+'</ul>':'')+(vreq.length?'<ul class="list">'+vreq.map(m=>'<li><div class="main"><button class="link" data-act="bereich" data-b="'+m.b+'">Vertretung für '+esc(bb(m.b).name)+'</button><div class="muted" style="font-size:13px">'+esc(pn(m.von))+' fragt dich</div></div><div class="row"><button class="small primary" data-act="vzusage" data-b="'+m.b+'" data-z="ja">Zusagen</button><button class="small" data-act="vzusage" data-b="'+m.b+'" data-z="nein">Absagen</button></div></li>').join('')+'</ul>':'')+(req.length?'<ul class="list">'+req.map(a=>'<li><div class="main"><button class="link" data-act="aufgabe" data-id="'+a.id+'">'+esc(a.t)+'</button><div class="muted" style="font-size:13px">'+fd(a.datum)+', '+a.von+'–'+a.bis+' Uhr · '+esc(bb(a.b).name)+'</div></div><div class="row"><button class="small primary" data-act="zusage" data-id="'+a.id+'" data-z="zugesagt">Zusagen</button><button class="small" data-act="zusage" data-id="'+a.id+'" data-z="abgesagt">Absagen</button></div></li>').join('')+'</ul>':(vreq.length||hreq.length?'':'<p class="muted">Keine offenen Anfragen.</p>'))+'</section>';
  const wvs=A.filter(a=>a.wv&&a.wv<=HEUTE&&open(a)&&(a.p===me||isMem(a.b,me)));
@@ -589,7 +590,7 @@ function vZeiten(){const me=S.me,mine=V.filter(v=>v.p===me).sort((a,b)=>TAGE.ind
 
 function vRunde(){const op=A.filter(open);const sec=(t,arr,f)=>'<section class="panel"><h3>'+t+' ('+arr.length+')</h3>'+(arr.length?'<ul class="list">'+arr.map(f).join('')+'</ul>':'<p class="muted">Nichts.</p>')+'</section>';
  const vis=a=>canSee(a.b);
- let h='<div class="wrap"><h1>Büro-Runde</h1><p class="sub">Für Montag, 23.11., 10 Uhr. Die App sammelt das von selbst.</p><div class="cols">';
+ let h='<div class="wrap"><h1>Büro-Runde</h1><p class="sub">Für Montag, 23.11., 10 Uhr. Die App sammelt das von selbst.</p>'+dauerHtml()+'<div class="cols" style="margin-top:14px">';
  h+=sec('Überfällig',op.filter(over).filter(vis),a=>aItem(a,true));
  h+=sec('Absagen dieser Woche',A.filter(a=>a.fs==='abgesagt').filter(vis),a=>'<li><div class="main"><button class="link" data-act="aufgabe" data-id="'+a.id+'">'+esc(a.t)+'</button><div class="muted" style="font-size:13px">'+esc(bb(a.b).name)+' · '+esc(pn(a.p))+(a.grund?' · Grund: '+esc(a.grund):'')+'</div></div></li>');
  h+=sec('Freigabe fehlt',op.filter(a=>a.fn&&!a.fg).filter(vis),a=>aItem(a,true));
@@ -607,6 +608,7 @@ function vHilfe(){return '<div class="wrap help"><h1>So geht’s</h1><div class=
  '<li>Für Einsätze schlägt die App Leute vor, deren Zeiten passen. Die Leute <strong>sagen zu oder ab</strong>.</li><li>Die KI hilft beim Vorbereiten, etwa beim Entwurf einer Antwort oder eines Vertrags. Sie verschickt nichts.</li>'+
  '<li>Was nach außen geht, braucht eine <strong>Freigabe</strong>. Erst danach wird es verschickt.</li><li>Wer ausfällt: Alles steht in der Aufgabe. Eine andere Person kann weitermachen.</li></ol>'+
  '<p><button class="link" data-act="aufgabe" data-id="'+ft.id+'">Beispiel ansehen: Foodtruck beim Nachbarschaftsfest</button></p></section>'+
+ '<section class="panel"><h3>Arbeit gemeinsam statt verteilt</h3><p>Bei uns verteilt nicht eine Person die Arbeit. Alle legen Aufgaben an, nehmen sich selbst welche, bitten um Hilfe und suchen gemeinsam Lösungen. Jede Person entscheidet selbst, wann und in welchen Bereichen sie arbeitet.</p><ul><li><strong>Was kann ich tun?</strong> Auf der Startseite steht alles, was noch niemand übernommen hat. Mit „Ich mach das“ nimmst du dir etwas.</li><li><strong>Aufgabe für alle anlegen:</strong> Dir fällt etwas auf? Schreib es als Aufgabe auf, ohne Person. Dann sieht es das ganze Team.</li><li><strong>Daueraufgaben</strong> wie Post oder Kühlschrank erscheinen von selbst neu.</li><li><strong>Hilfe anfordern</strong> an jeder Aufgabe, <strong>Vertretung anfragen</strong> im Bereich.</li><li>Was liegen bleibt, bespricht die <strong>Runde</strong>: ohne Person, überfällig, abgesagt.</li></ul></section>'+
  '<section class="panel"><h3>Wörter kurz erklärt</h3><p><strong>Freigabe:</strong> Eine Person, die das darf, sagt: Dieser Entwurf darf so raus.</p><p><strong>Übergabe:</strong> In der Aufgabe steht alles Wichtige. So kann eine andere Person weitermachen.</p>'+
  '<p><strong>Vollmacht:</strong> Der Vorstand erlaubt einer Person schriftlich, für den Verein zu unterschreiben, zum Beispiel einen Mietvertrag nach Vorlage.</p><p><strong>Zusage:</strong> Niemand wird fest eingeplant, ohne selbst zuzusagen.</p><p><strong>Status von Raumbelegungen:</strong> angefragt, dann optioniert (vorgemerkt), dann fest gebucht. „Gesperrt“ heißt: Der Raum ist nicht nutzbar.</p><p><strong>Wiedervorlage:</strong> Die App erinnert dich an einem bestimmten Tag an eine Aufgabe.</p>'+
  '<h3 style="margin-top:14px">Was die KI macht und was nicht</h3><p>Sie liest, sortiert, rechnet und schreibt Entwürfe und Checklisten. Sie entscheidet nichts, verschickt nichts und unterschreibt nichts. Das machen Menschen.</p><p><strong>Beispiel Tech-Rider:</strong> Kommt ein Rider per Mail, legt die Automatik ihn ab und erstellt eine Aufgabe. Auf Knopfdruck liest die KI ihn und vergleicht ihn mit dem Inventar. Ein Mensch prüft das Ergebnis, erst dann entstehen Teilaufgaben. <button class="link" data-act="aufgabe" data-id="'+rid.id+'">Beispiel ansehen</button></p></section></div></div>'}
@@ -1056,6 +1058,32 @@ function vMonat(){if(!(isMem('va',S.me)||isMem('fi',S.me)))return '<div class="w
  return '<div class="wrap zettel"><div class="noprint row" style="margin-bottom:10px;align-items:flex-end"><label>Monat<select data-bm="1">'+ms.map(x=>'<option value="'+x+'"'+(x===m?' selected':'')+'>'+x.slice(5)+'/'+x.slice(0,4)+'</option>').join('')+'</select></label><button class="primary" onclick="window.print()">Drucken / als PDF</button><button data-act="nav" data-v="finanzen">Zurück</button></div>'+
   '<h1>Monatsübersicht '+m.slice(5)+'/'+m.slice(0,4)+'</h1><p class="k">Für die Büro-Runde. Ergebnis = Einnahmen minus Ausgaben, Ist aus Finanzen und Kasse.</p>'+
   '<div class="scroll"><table><tr><th>Datum</th><th>Termin</th><th>Gäste</th><th>Ergebnis Plan</th><th>Ergebnis Ist</th><th>GEMA-Setlist</th><th>Vertrag</th></tr>'+rows+'<tr><th colspan="2">Summe ('+evs.length+' Termine)</th><th>'+su.g+'</th><th>'+eur(su.pE-su.pA)+'</th><th>'+eur(su.iE-su.iA)+'</th><th></th><th></th></tr></table></div></div>'}
+
+// Daueraufgaben: wiederkehrende Arbeit, die niemandem gehört, bis jemand „Ich mach das“ drückt
+const RHY={werktag:'jeden Werktag',woche:'jede Woche',monat:'jeden Monat'};
+const DA=[];let daid=1;
+function dauer(t,b,r,x){DA.push(Object.assign({id:daid++,t,b,r,wt:'Mo',md:1},x||{}))}
+dauer('Post holen und verteilen','ep','werktag');
+dauer('Postfach info@ durchsehen und weiterleiten','ep','werktag');
+dauer('Kühlschrank an der Theke prüfen (Datum, Sauberkeit)','bg','woche',{wt:'Do'});
+dauer('Verbrauchsmaterial zählen und Einkaufsliste prüfen','ht','monat',{md:1});
+function daFaellig(x,d){const w=wt(d);if(x.r==='werktag')return !['Sa','So'].includes(w);if(x.r==='woche')return w===x.wt;return +d.slice(8)===+x.md}
+function daNaechst(x){const d=new Date(HEUTE+'T12:00:00');for(let i=0;i<40;i++){const s=d.toISOString().slice(0,10);if(daFaellig(x,s))return s;d.setDate(d.getDate()+1)}return ''}
+function daErzeugen(){DA.forEach(x=>{if(daFaellig(x,HEUTE)&&!A.some(a=>a.dauer===x.id&&a.frist===HEUTE))T({t:x.t,b:x.b,frist:HEUTE,dauer:x.id,ersteller:'Daueraufgabe',notiz:'Wiederkehrende Aufgabe ('+RHY[x.r]+'). Sie gehört niemandem, bis jemand „Ich mach das“ drückt.'})})}
+daErzeugen();
+function topfHtml(){const me=S.me,mine=a=>isMem(a.b,me)?0:1;
+ const pool=A.filter(a=>open(a)&&ohneP(a)&&canSee(a.b)).sort((x,y)=>mine(x)-mine(y)||(x.frist||'9').localeCompare(y.frist||'9'));
+ const zeig=S.topfAlle?pool:pool.slice(0,6);
+ let h='<section class="panel" style="margin-top:14px"><h3>Was kann ich tun? ('+pool.length+')</h3><p class="muted" style="font-size:13px;margin-top:0">Arbeit, die noch niemand übernommen hat. Oben die aus deinen Bereichen. Niemand verteilt hier, jede Person nimmt sich selbst etwas.</p>';
+ h+=pool.length?'<ul class="list">'+zeig.map(a=>'<li><div class="main"><button class="link" data-act="aufgabe" data-id="'+a.id+'">'+esc(a.t)+'</button><div class="muted" style="font-size:13px">'+esc(bb(a.b).name)+(a.frist?' · bis '+fd(a.frist):'')+(a.dauer?' · <span class="chip">wiederkehrend</span>':'')+(isEinsatz(a)&&a.datum?' · Einsatz '+fd(a.datum)+', '+a.von+'–'+a.bis:'')+'</div></div><button class="small primary" data-act="nehmeId" data-id="'+a.id+'">Ich mach das</button></li>').join('')+'</ul>':'<p class="muted">Gerade ist alles verteilt. Wenn dir etwas auffällt: unten als Aufgabe für alle anlegen.</p>';
+ if(pool.length>6)h+='<button class="link" data-act="topfAlle">'+(S.topfAlle?'Weniger zeigen':'Alle '+pool.length+' zeigen')+'</button>';
+ h+='<div class="row" style="margin-top:10px"><button data-act="form" data-f="topfNeu">Aufgabe für alle anlegen</button><span class="muted" style="font-size:13px">Dir fällt etwas auf? Schreib es auf, statt es einer Person zu sagen. Brauchst du Hilfe bei einer eigenen Aufgabe: dort „Hilfe anfordern“.</span></div>';
+ if(S.form==='topfNeu')h+=formNeueAufgabe('').replace('<label>Art<select','<label>Bereich<select id="na-b">'+B.filter(b=>canSee(b.id)).map(b=>'<option value="'+b.id+'">'+esc(b.name)+'</option>').join('')+'</select></label><label>Art<select');
+ return h+'</section>'}
+function dauerHtml(){let h='<section class="panel"><h3>Daueraufgaben ('+DA.length+')</h3><p class="muted" style="font-size:13px;margin-top:0">Arbeit, die immer wieder anfällt. Sie erscheint von selbst unter „Was kann ich tun?“ und gehört niemandem, bis jemand sie übernimmt. Welche es gibt, legt die Runde fest.</p>';
+ h+='<ul class="list">'+DA.map(x=>'<li><div class="main">'+esc(x.t)+'<div class="muted" style="font-size:13px">'+esc(bb(x.b).name)+' · '+RHY[x.r]+(x.r==='woche'?' ('+x.wt+')':x.r==='monat'?' (am '+x.md+'.)':'')+' · nächstes Mal '+fd(daNaechst(x))+'</div></div><button class="small" data-act="dadel" data-id="'+x.id+'">Entfernen</button></li>').join('')+'</ul>';
+ h+='<form class="inline" data-form="dauer"><label class="grow">Was fällt immer wieder an?<input id="da-t" required placeholder="z. B. Altglas wegbringen"></label><label>Bereich<select id="da-b">'+B.map(b=>'<option value="'+b.id+'">'+esc(b.name)+'</option>').join('')+'</select></label><label>Wie oft<select id="da-r">'+Object.keys(RHY).map(k=>'<option value="'+k+'">'+RHY[k]+'</option>').join('')+'</select></label><label>Wochentag<select id="da-wt">'+TAGE.map(t=>'<option>'+t+'</option>').join('')+'</select></label><label>Tag im Monat<input id="da-md" type="number" min="1" max="28" value="1" style="width:80px"></label><button class="primary">Hinzufügen</button></form></section>';
+ return h}
 dealSeed();
 
 function render(){let v;
@@ -1128,6 +1156,9 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
  else if(act==='hilfe'){const t=A.find(y=>y.id===+d.id),x=t&&t.hilfe[+d.i];if(!x)return;x.st=d.z;
   if(d.z==='hilft'){if(t.p!==S.me&&!t.mit.includes(S.me))t.mit.push(S.me);logA(t,pn(S.me)+' hilft');toast('Danke! '+pn(x.von)+' bekommt sofort Bescheid. Du stehst jetzt bei „Weitere Personen“.')}
   else{logA(t,pn(S.me)+' kann gerade nicht helfen');toast(pn(x.von)+' bekommt sofort Bescheid und kann jemand anderen fragen.')}render()}
+ else if(act==='nehmeId'){const t=A.find(x=>x.id===+d.id);t.ext=null;t.p=S.me;t.z=isEinsatz(t)?'zugesagt':'';if(t.fs==='offen')t.fs='arbeit';logA(t,'Übernommen');toast('Übernommen. Steht jetzt unter „Meine Aufgaben“.');render()}
+ else if(act==='topfAlle'){S.topfAlle=!S.topfAlle;render()}
+ else if(act==='dadel'){const i=DA.findIndex(x=>x.id===+d.id);if(i>-1)DA.splice(i,1);toast('Daueraufgabe entfernt. Bereits angelegte Aufgaben bleiben.');render()}
  else if(act==='nehme'){a.ext=null;a.p=S.me;a.z=isEinsatz(a)?'zugesagt':'';if(a.fs==='offen')a.fs='arbeit';logA(a,'Übernommen');toast('Übernommen.');render()}
  else if(act==='web'){E[+d.i].web=true;toast('Freigegeben: Der Termin erscheint jetzt auf der Webseite.');render()}
  else if(act==='fest'){E[+d.i].st='fest';toast('Fest gebucht.');render()}
@@ -1205,8 +1236,9 @@ document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.d
  else if(d.form==='absage'){a.fs='abgesagt';a.grund=(val('ab-g')||'').trim();logA(a,a.grund?'Abgesagt: '+a.grund:'Abgesagt');S.form='';toast('Abgesagt. Steht jetzt in der Übersicht für die Runde.');render()}
  else if(d.form==='punkt'){const v=VL.find(x=>x.id===+d.v);v.items.push({typ:val('pt-typ-'+v.id),t:val('pt-text-'+v.id),von:S.me});toast('Ergänzt. Danke!');render()}
  else if(d.form==='aufgabe'){const art=val('na-art'),ein=['Einsatz','Theke'].includes(art),dd=val('na-d');
-  const n=T({ersteller:S.me,t:val('na-t'),b:d.b,parent:d.parent?+d.parent:null,art,frist:dd,datum:ein?dd:'',von:ein?val('na-von'):'',bis:ein?val('na-bis'):''});
+  const n=T({ersteller:S.me,t:val('na-t'),b:d.b||val('na-b'),parent:d.parent?+d.parent:null,art,frist:dd,datum:ein?dd:'',von:ein?val('na-von'):'',bis:ein?val('na-bis'):''});
   logA(n,'Angelegt');S.form='';toast('Angelegt.');if(!d.parent)go('aufgabe',{a:n.id});else render()}
+ else if(d.form==='dauer'){const t=(val('da-t')||'').trim();if(!t)return;dauer(t,val('da-b'),val('da-r'),{wt:val('da-wt'),md:Math.min(28,Math.max(1,+val('da-md')||1))});daErzeugen();toast('Daueraufgabe angelegt. Nächstes Mal: '+fd(daNaechst(DA[DA.length-1]))+'.');render()}
  else if(d.form==='neu'){const v=VL.find(x=>x.id===+val('nv-v')),dd=val('nv-d');
   const par=T({ersteller:S.me,t:val('nv-t'),b:v.b,p:S.me,frist:dd,fs:'arbeit',fn:true,notiz:'Angelegt aus der Vorlage „'+v.name+'“.',pack:v.items.filter(i=>i.typ==='Packliste').map(i=>({t:i.t,ok:false}))});
   if(!par.pack.length)par.pack=null;logA(par,'Vorgang aus Vorlage „'+v.name+'“ angelegt');
