@@ -117,6 +117,8 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute
 .zettel .sb{display:inline-block;width:52px;height:26px;border:1px solid var(--line);margin:0 4px 4px 0}
 .zettel .l{border-bottom:1px solid var(--line);height:24px;margin:4px 0}
 .zettel .k{color:var(--muted);font-size:13px}
+.vtext{white-space:pre-wrap;line-height:1.55;padding:16px;border:1px solid var(--line);border-radius:8px;margin-top:10px}
+mark.fehlt{background:#ffd9d4;color:#8a1408;padding:0 2px;border-radius:3px}
 @media print{header.top,.demo,.noprint,nav{display:none!important}body{background:#fff;color:#000}.zettel{max-width:none;padding:0}.zettel *{color:#000}}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c)}
 .bell{position:relative}
@@ -237,8 +239,9 @@ const FIN={
  'Kiezabend (So 22.11.)':[{art:'Einnahme',p:'Theke (Schätzung)',b:600,q:'eingetragen'},{art:'Ausgabe',p:'Getränkeeinkauf',b:280,q:'eingetragen'}],
  'Lesung: Geschichten aus Hochfeld (Fr 27.11.)':[{art:'Einnahme',p:'Eintritt auf Spendenbasis (Schätzung)',b:150,q:'eingetragen'},{art:'Ausgabe',p:'Honorar Tontechnik (extern, geplant)',b:250,q:'eingetragen'}],
  'Nachbarschaftsfest mit Foodtruck (Sa 28.11.)':[{art:'Einnahme',p:'Verkauf Foodtruck (Schätzung)',b:450,q:'eingetragen'},{art:'Ausgabe',p:'Lebensmittel (geplant)',b:180,q:'eingetragen'}],
+ 'Konzert: Latin Night (Sa 05.12.)':[],
  'Ohne Veranstaltung (laufender Betrieb)':[]};
-const VERANST=['Kiezabend (So 22.11.)','Lesung: Geschichten aus Hochfeld (Fr 27.11.)','Nachbarschaftsfest mit Foodtruck (Sa 28.11.)','Ohne Veranstaltung (laufender Betrieb)'];
+const VERANST=['Kiezabend (So 22.11.)','Lesung: Geschichten aus Hochfeld (Fr 27.11.)','Nachbarschaftsfest mit Foodtruck (Sa 28.11.)','Konzert: Latin Night (Sa 05.12.)','Ohne Veranstaltung (laufender Betrieb)'];
 const KAT=['Tontechnik','Lichttechnik','Videotechnik','Bühne','Strom und Kabel','Küche','Theke','Geschirr und Gläser','Kasse','Möbel','Werkzeug','Reinigung','Sicherheit','Haustechnik','Zelt und Draußen','Fahrzeug','Spiel und Sport','Musikinstrumente','Basteln','Foto und Video','Werbemittel','Büro und IT'];
 let invId=100,ekId=1;
 const EK=[
@@ -320,6 +323,7 @@ const E=[
  {cal:'va',d:'2026-11-22',von:'18:00',bis:'22:00',t:'Kiezabend',o:'Saal',web:true},
  {cal:'va',d:'2026-11-27',von:'18:00',bis:'20:00',t:'Lesung: Geschichten aus Hochfeld',o:'Saal',web:true},
  {cal:'va',d:'2026-11-28',von:'14:00',bis:'18:00',t:'Nachbarschaftsfest mit Foodtruck',o:'draußen',web:false,b:'ft'},
+ {cal:'va',d:'2026-12-05',von:'20:00',bis:'23:30',t:'Konzert: Latin Night',o:'Saal',web:false},
  {cal:'te',d:'2026-11-19',von:'16:00',bis:'17:00',t:'Telefonat mit der Chorleitung',b:'vm'},
  {cal:'te',d:'2026-11-20',von:'15:00',bis:'16:00',t:'Gespräch beim Ordnungsamt',b:'vb'},
  {cal:'te',d:'2026-11-23',von:'10:00',bis:'11:00',t:'Büro-Runde',nav:'runde'},
@@ -328,7 +332,7 @@ const E=[
  {cal:'rb',d:'2026-11-22',von:'17:00',bis:'23:00',t:'Saal: Kiezabend',o:'Saal',st:'fest'},
  {cal:'rb',d:'2026-11-24',von:'08:00',bis:'20:00',t:'Saal gesperrt: Boden wird versiegelt',o:'Saal',st:'gesperrt',b:'ht'},
  {cal:'rb',d:'2026-11-27',von:'17:00',bis:'21:00',t:'Saal: Lesung (Aufbau ab 17 Uhr)',o:'Saal',st:'fest'},
- {cal:'rb',d:'2026-11-27',von:'19:00',bis:'22:00',t:'Saal: Chorprobe',o:'Saal',st:'optioniert'},
+ {cal:'rb',d:'2026-11-27',von:'19:00',bis:'22:00',t:'Saal: Chorprobe',o:'Saal',st:'optioniert',miete:true},
  {cal:'rb',d:'2026-11-26',von:'14:00',bis:'17:00',t:'Gruppenraum: Bastelnachmittag',o:'Gruppenraum',st:'fest',b:'kj'}];
 E.forEach((e,i)=>e.i=i);
 // Kasse: Zählprotokoll je Veranstaltung (Beträge in Cent, damit nichts falsch rundet)
@@ -556,6 +560,7 @@ function evTitel(e){if(e.nav)return '<button class="evlink" data-act="nav" data-
 function evHtml(e){const c=CAL.find(x=>x.id===e.cal);let x='';
  if(e.st)x+='<span class="chip'+(e.st==='fest'?' ok':e.st==='gesperrt'?' crit':' warn')+'">'+ST[e.st]+'</span>'+((e.st==='optioniert'||e.st==='angefragt')&&S.me&&canFg('vm')?'<button class="small" data-act="fest" data-i="'+e.i+'">Fest buchen</button>':'');
  if(c.pub)x+=e.web?'<span class="chip ok">auf der Webseite</span>':'<span class="chip warn">noch nicht auf der Webseite</span>'+(S.me&&canFg('va')?'<button class="small" data-act="web" data-i="'+e.i+'">Für Webseite freigeben</button>':'');
+ if(S.me&&isDealEv(e)&&canDeal(e))x+='<button class="small" data-act="deal" data-ev="'+e.i+'">Deal und Vertrag</button>';
  return '<div class="ev" style="--c:'+c.c+'"><time>'+(e.von?e.von+'–'+e.bis:'ganztägig')+'</time><span class="main" style="min-width:0;flex:1">'+evTitel(e)+(e.o?' <span class="muted">· '+esc(e.o)+'</span>':'')+'</span><span class="chip">'+esc(c.name)+'</span>'+x+'</div>'}
 function vKalender(){const k=konflikte();let h='<div class="wrap"><h1>Kalender</h1><p class="sub">Alle Kalender des SGDV aus Google, in einer Ansicht. Ein- und ausblenden mit den Schaltern.</p>';
  h+='<div class="row">'+CAL.map(c=>'<label class="chip" style="--c:'+c.c+';cursor:pointer;flex-direction:row;color:var(--fg)"><input type="checkbox" data-act="cal" data-c="'+c.id+'"'+(S.cals[c.id]?' checked':'')+'> <span class="dot"></span> '+esc(c.name)+'</label>').join('')+'</div>';
@@ -653,8 +658,8 @@ function vFinanzen(){if(!isMem('fi',S.me))return '<div class="wrap"><h1>Finanzen
   h+='<h2>'+esc(v)+'</h2><section class="panel">'+(FIN[v].length?'<div class="scroll"><table><thead><tr><th>Art</th><th>Posten</th><th>MwSt</th><th>Betrag</th><th>Herkunft</th></tr></thead><tbody>'+FIN[v].map(x=>'<tr><td><span class="chip'+(x.art==='Einnahme'?' ok':'')+'">'+x.art+'</span></td><td>'+esc(x.p)+'</td><td>'+esc(x.mw||'')+'</td><td>'+(x.art==='Ausgabe'?'– ':'')+eur(x.b)+'</td><td class="muted">'+esc(x.q)+(x.pp==='offen'?' <span class="chip warn">Auszahlung offen</span>':'')+'</td></tr>').join('')+
   '<tr><td colspan="3"><strong>Ergebnis</strong></td><td colspan="2"><strong>'+eur(e-a)+'</strong></td></tr></tbody></table></div>':'<p class="muted">Noch keine Einträge.</p>')+
   (FIN[v].some(x=>x.pp==='offen')?'<div class="row" style="align-items:flex-end;margin-top:10px"><label>PayPal-Auszahlung angekommen? Gebühren (€)<input id="pp-'+i+'" type="number" step="0.01" min="0" style="width:120px" placeholder="laut Auszug"></label><button data-act="ppok" data-va="'+i+'">Abhaken</button></div>':'')+
-  '<form class="inline" data-form="fin" data-va="'+i+'"><label>Art<select id="fi-a-'+i+'"><option>Einnahme</option><option>Ausgabe</option></select></label><label class="grow">Posten<input id="fi-p-'+i+'" required placeholder="z. B. Theke, Eintritt, Miete, Honorar"></label><label>Betrag (€)<input id="fi-b-'+i+'" type="number" step="0.01" min="0" required></label><button>Eintragen</button></form></section>';
-  if(!/laufender/.test(v)){const k=KASSE[v];h+=(k&&k.fertig)||S.kasse===v?kasseHtml(v):'<p class="row"><button class="primary" data-act="kopen" data-va="'+i+'">Kasse abrechnen (Zählprotokoll)</button><button data-act="zettel" data-va="'+i+'">Abendzettel drucken</button></p>'}});
+  '<form class="inline" data-form="fin" data-va="'+i+'"><label>Posten<select id="fi-k-'+i+'">'+['Einnahme','Ausgabe'].map(a=>'<optgroup label="'+a+'n">'+KPOS[a].map(q=>'<option value="'+a+'|'+esc(q)+'">'+esc(q)+'</option>').join('')+'</optgroup>').join('')+'</select></label><label class="grow">Notiz<input id="fi-p-'+i+'" placeholder="z. B. Rechnung Druckerei"></label><label>Betrag (€)<input id="fi-b-'+i+'" type="number" step="0.01" min="0" required></label><button>Eintragen</button></form></section>';
+  if(!/laufender/.test(v)){const k=KASSE[v];h+=(k&&k.fertig)||S.kasse===v?kasseHtml(v):'<p class="row"><button class="primary" data-act="kopen" data-va="'+i+'">Kasse abrechnen (Zählprotokoll)</button><button data-act="zettel" data-va="'+i+'">Abendzettel drucken</button>'+(VA_E[v]?'<button data-act="deal" data-ev="'+VA_E[v].i+'">Deal und Kalkulation</button>':'')+'</p>'}});
  return h+'</div>'}
 function rechnungHtml(a){const r=a.rechnung;let sum=0;
  const rows=r.pos.map(p=>{const ep=PREIS[p.inv],s=ep!=null?ep*p.m:null;if(s!=null)sum+=s;return '<tr><td>'+esc(p.n)+'</td><td>'+p.m+'</td><td>'+(ep!=null?eur(ep):'<span class="chip warn">Preis fehlt</span>')+'</td><td>'+(s!=null?eur(s):'–')+'</td></tr>'}).join('');
@@ -703,6 +708,7 @@ function kFertig(i){const v=VERANST[i],k=KASSE[v],r=kAlle(k),akt=kAktiv(k);
   if(x.karte)FIN[v].push({art:'Einnahme',p:POS2[s]+' Karte (PayPal POS)',b:x.karte/100,mw,q:'Tagesbericht PayPal POS',pp:'offen'});
   k[s].aus.forEach(a=>FIN[v].push({art:'Ausgabe',p:a.p+' (bar aus der '+KS2[s].split(' ')[0]+')',b:a.c/100,q:'Beleg '+(a.beleg||'fehlt')}))});
  if(k.modus==='band_aus'&&r.abend.ges)FIN[v].push({art:'Ausgabe',p:'Eintritt an die Band ausgezahlt',b:r.abend.ges/100,q:'Quittung der Band'});
+ const dd=dealVon(v);if(dd&&dd.dtyp==='garantie'&&r.abend){FIN[v]=FIN[v].filter(f=>f.q!=='Gage laut GEMA und KSK'&&f.q!=='Gage laut Deal');const g=Math.round(bandAnteil(dd,r.abend.ges/100)*100)/100;FIN[v].push({art:'Ausgabe',p:'Gage '+dd.partner+' laut Deal (Garantie + Beteiligung)',b:g,q:'Gage laut Deal',kat:'Gagen'});if(VD[v])VD[v].gage=String(g)}
  if(VD[v]){if(k.gaeste)VD[v].gaeste=k.gaeste;if(k.modus==='band_aus'&&r.abend){VD[v].gtyp='eintritt';VD[v].gage=String(r.abend.ges/100)}}
  A.filter(t=>t.kasse&&t.kasse.va===v&&open(t)).forEach(t=>{t.fs='erledigt';logA(t,'Kasse abgerechnet: Einnahmen '+cent(r.ges))});
  S.kasse=null;toast('Abgerechnet. Einnahmen '+cent(r.ges)+(ersetzt?' (Schätzung ersetzt)':'')+'.');render()}
@@ -780,6 +786,7 @@ function vdInit(){E.filter(e=>e.cal==='va').forEach(e=>VA_E[vaName(e)]=e);
  const seed={'Kiezabend':{gema:true,setlist:'angefordert',preis:'5',ksk:true,gtyp:'eintritt',kuenstler:'Die Hochfelder (Beispielband)'},
   'Lesung':{gema:false,setlist:'nicht',preis:'0',ksk:true,gtyp:'fest',gage:'150',kuenstler:'Autorin (Beispiel)'},
   'Nachbarschaftsfest':{gema:true,setlist:'offen',preis:'0',ksk:false,gtyp:'ohne',kuenstler:''},
+  'Konzert: Latin Night':{gema:true,setlist:'offen',preis:'13',ksk:true,gtyp:'anteil',gage:'900',kuenstler:'Banda Ejemplo (Beispielband)'},
   'Soli-Café':{gema:false,setlist:'nicht',preis:'0',ksk:false,gtyp:'ohne',kuenstler:''}};
  VERANST.filter(v=>!/laufender/.test(v)).forEach(v=>{if(VD[v])return;const k=Object.keys(seed).find(s=>v.indexOf(s)===0);VD[v]=Object.assign({gema:false,setlist:'offen',gaeste:'',preis:'',ksk:false,gtyp:'ohne',gage:'',kuenstler:''},k?seed[k]:{})})}
 function vaDatum(v){const e=VA_E[v];return e?e.d:''}
@@ -800,7 +807,7 @@ function vGema(){const fin=isMem('fi',S.me);if(!(isMem('va',S.me)||fin))return '
   '<label>Gage-Art<select data-vd="gtyp" data-va="'+i+'">'+Object.keys(GTYP).map(g=>'<option value="'+g+'"'+(x.gtyp===g?' selected':'')+'>'+GTYP[g]+'</option>').join('')+'</select></label>'+
   (fin?'<label>Gage (€)'+inp('gage','type="number" min="0" step="0.01" style="width:110px"')+'</label>':'')+'</div>'+
   (x.gema&&x.setlist!=='eingereicht'?'<p class="muted" style="font-size:13px">Setlist spätestens 6 Wochen nach der Veranstaltung einreichen'+(vaDatum(v)?': bis '+fd(new Date(Date.parse(vaDatum(v))+42*864e5).toISOString().slice(0,10)):'')+'.</p>':'')+
-  '<div class="row" style="margin-top:8px"><button class="small" data-act="zettel" data-va="'+i+'">Abendzettel drucken</button></div></section>'});
+  '<div class="row" style="margin-top:8px"><button class="small" data-act="zettel" data-va="'+i+'">Abendzettel drucken</button>'+(VA_E[v]?'<button class="small" data-act="deal" data-ev="'+VA_E[v].i+'">Deal und Vertrag</button>':'')+'</div></section>'});
  const gl=vs.filter(v=>VD[v].gema);
  h+='<h2>GEMA-Liste November 2026</h2><section class="panel"><div class="scroll"><table><thead><tr><th>Datum</th><th>Veranstaltung</th><th>Ort</th><th>Eintritt</th><th>Zahlende Gäste</th><th>Setlist</th></tr></thead><tbody>'+
   gl.map(v=>{const x=VD[v],e=VA_E[v]||{};return '<tr><td>'+fd(vaDatum(v))+'</td><td>'+esc(v.replace(/ \(.*\)$/,''))+'</td><td>'+esc(e.o||'')+'</td><td>'+(x.preis&&+x.preis?eur(+x.preis):'frei')+'</td><td>'+(x.gaeste||'<span class="chip warn">fehlt</span>')+'</td><td>'+SETL[x.setlist]+'</td></tr>'}).join('')+'</tbody></table></div>'+
@@ -850,9 +857,136 @@ function zumHtml(){return '<h2>Zumieten</h2><section class="panel">'+(ZM.length?
  '<form class="inline" data-form="zumiet"><label class="grow">Was fehlt?<input id="zm-n" required placeholder="z. B. 2 Monitorboxen"></label><label>Anzahl<input id="zm-m" type="number" min="1" value="1" style="width:80px"></label><label>Bei wem<select id="zm-bei">'+VERL.map(v=>'<option>'+esc(v)+'</option>').join('')+'</select></label><label>Für welche Veranstaltung?<select id="zm-va">'+VERANST.filter(v=>!/laufender/.test(v)).map(v=>'<option>'+esc(v)+'</option>').join('')+'</select></label><button>Zumieten</button></form>'+
  '<p class="muted" style="font-size:13px">Legt eine Aufgabe mit fertiger Bestell-Mail und Wiedervorlage an. Bestellen mit Kosten braucht eine Freigabe.</p></section>'}
 
+// Deal, Kalkulation und Vertrag je Termin (wie Clubplaner: Auto-Formular + Dokumenten-Vorlagen)
+const VEREIN={name:'Verein für die solidarische Gesellschaft der Vielen e.V. (SGDV)',haus:'ZK Hochfeld',anschrift:'',vertreten:''};
+const DART={band:'Eigene Veranstaltung mit Band / Künstler*in',koop:'Externer Veranstalter (Kooperation)',miete:'Vermietung'};
+const DTYP={fest:'Festgage',garantie:'Garantie + Beteiligung',tuer:'Türdeal (Band bekommt Eintritt)',ohne:'Ohne Gage / Soli'};
+const VSTAT={keiner:'noch keiner',entwurf:'Entwurf',verschickt:'verschickt',unterschrieben:'unterschrieben'};
+const UNTERK={keine:'keine',hotel:'Hotel',penn:'Pennplatz / privat'};
+const CATB={nein:'kein Catering',wir:'wir kochen (Wareneinsatz)',pauschale:'Pauschale / Buyout'};
+const FF=['Zuschauererwartung'];
+const KSA={satz:''};
+const DEAL={};let vnr=131;
+const KPOS={Einnahme:['Eintritt Abendkasse','Eintritt Vorverkauf','Getränke','Essen und Foodtruck','Catering (wir bieten an)','Raummiete','Werbung','Sponsoring','Zuschüsse','Sonstige Einnahmen'],
+ Ausgabe:['Gagen','Reisekosten','Hotel / Unterkunft','Catering für Künstler*innen','Sonstige Künstlerkosten','Wareneinsatz Getränke und Essen','GEMA','Künstlersozialabgabe','Werbung: Gestaltung','Werbung: Druck','Werbung: Plakatierung','Werbung: Flyerverteilung','Pressearbeit','Post und Telefon','Werbung sonstige','Deko','Veranstaltungstechnik','Genehmigungen und Gebühren','Versicherung','Lohnkosten (nur Summe)','PayPal-Gebühren','Sonstige Kosten']};
+function dealNeu(e){return {art:e.cal==='rb'?'miete':'band',partner:'',firma:'',ansprech:'',str:'',ort:'',mail:'',vtyp:'',genre:'',einlass:'',ende:e.bis||'',preis:'',erm:'',vvk:false,vvkPreis:'',vvkKont:'',
+ dtyp:'ohne',gage:'',sockel:'',pBand:'',kosten:'',gtext:'',unterk:'keine',unterkBem:'',cat:'nein',catPreis:'',reise:'',catWir:false,catWirPreis:'',
+ miete:'',pa:'',techniker:'',ordner:'',mcat:'',licht:'',msonst:'',mw:'',mStart:e.von||'',mEnde:e.bis||'',pVer:'',vereinb:'',vstat:'keiner',vnr:'',vdat:'',ff:{},plan:{},erw:''}}
+const isDealEv=e=>e.cal==='va'||(e.cal==='rb'&&e.miete);
+function canDeal(e){return isMem('va',S.me)||isMem('fi',S.me)||(e.cal==='rb'&&isMem('vm',S.me))}
+function dealVon(v){const e=E.find(x=>x.cal==='va'&&vaName(x)===v);return e?dl(e):null}
+function dl(e){if(!DEAL[e.i])DEAL[e.i]=dealNeu(e);return DEAL[e.i]}
+function dealSeed(){const by=t=>E.find(e=>e.t.indexOf(t)===0);
+ Object.assign(dl(by('Kiezabend')),{partner:'Die Hochfelder (Beispielband)',vtyp:'Konzert',genre:'Folk',einlass:'17:30',preis:'5',dtyp:'tuer',pBand:'100',gtext:'Eintritt gegen Quittung',cat:'wir',vstat:'entwurf',vnr:'00129',vdat:'2026-11-10',ff:{Zuschauererwartung:'80'}});
+ Object.assign(dl(by('Lesung')),{partner:'Autorin (Beispiel)',vtyp:'Lesung',einlass:'17:30',preis:'0',dtyp:'fest',gage:'150',gtext:'gegen Rechnung',reise:'40',cat:'wir',erw:'40'});
+ Object.assign(dl(by('Konzert: Latin Night')),{partner:'Banda Ejemplo (Beispielband)',firma:'Banda Ejemplo GbR (Beispiel)',ansprech:'Ana Beispiel',str:'Musterstraße 1',ort:'47000 Musterstadt',mail:'booking@beispiel.invalid',
+  vtyp:'Konzert',genre:'Latin',einlass:'19:30',preis:'13',erm:'8',vvk:true,vvkPreis:'10',vvkKont:'100',dtyp:'garantie',sockel:'900',pBand:'70',kosten:'300',gtext:'plus 7 % MwSt',unterk:'hotel',unterkBem:'3 DZ, 2 EZ',cat:'wir',reise:'0',
+  vereinb:'Merch-Verkauf durch die Band ist erlaubt.',erw:'120',ff:{Zuschauererwartung:'voll'},plan:{'Getränke':600,'Werbung: Druck':120,'Hotel / Unterkunft':350,'Veranstaltungstechnik':200}});
+ Object.assign(dl(by('Saal: Chorprobe')),{partner:'Chor (Beispiel)',ansprech:'Chorleitung (Beispiel)',vtyp:'Probe',miete:'200',techniker:'0',ordner:'0',mStart:'19:00',mEnde:'22:00'})}
+// Was die Band bei einer bestimmten Eintrittssumme bekommt
+function bandAnteil(d,eintritt){const p=(+d.pBand||0)/100;
+ if(d.dtyp==='fest')return +d.gage||0;
+ if(d.dtyp==='garantie')return Math.max(+d.sockel||0,p*Math.max(0,eintritt-(+d.kosten||0)));
+ if(d.dtyp==='tuer')return (d.pBand===''?1:p)*eintritt;return 0}
+function mSumme(d){return ['miete','pa','techniker','ordner','mcat','licht','msonst'].reduce((s,k)=>s+(+d[k]||0),0)}
+function planAuto(d,pos){if(pos==='Gagen')return d.dtyp==='fest'?+d.gage||0:d.dtyp==='garantie'?+d.sockel||0:0;
+ if(pos==='Reisekosten')return +d.reise||0;if(pos==='Catering (wir bieten an)'&&d.catWir)return +d.catWirPreis||0;
+ if(pos==='Catering für Künstler*innen'&&d.cat==='pauschale')return +d.catPreis||0;
+ if(pos==='Raummiete')return d.art==='miete'?mSumme(d):0;
+ if(pos==='Künstlersozialabgabe'&&KSA.satz)return Math.round(planAuto(d,'Gagen')*(+KSA.satz)/100*100)/100;
+ if(pos==='Eintritt Abendkasse'&&d.erw&&d.dtyp!=='tuer')return (+d.erw||0)*(+d.preis||0);return 0}
+function planW(d,pos){return d.plan[pos]!==undefined&&d.plan[pos]!==''?+d.plan[pos]:planAuto(d,pos)}
+function katVon(x){if(x.kat)return x.kat;const p=x.p;
+ if(/^Eintritt (bar|Karte)/.test(p))return 'Eintritt Abendkasse';if(/^Getränke|Theke/.test(p))return 'Getränke';
+ if(/Gage|Eintritt an die Band|Honorar(?! Ton)/.test(p))return x.art==='Ausgabe'?'Gagen':'Sonstige Einnahmen';
+ if(/PayPal/.test(p))return 'PayPal-Gebühren';if(/Getränkeeinkauf|Lebensmittel|Verbrauch|Pommes/.test(p))return 'Wareneinsatz Getränke und Essen';
+ if(/Foodtruck/.test(p))return 'Essen und Foodtruck';if(/Tontechnik|Technik/.test(p))return 'Veranstaltungstechnik';
+ return x.art==='Einnahme'?'Sonstige Einnahmen':'Sonstige Kosten'}
+function istW(v,pos){return (FIN[v]||[]).filter(x=>katVon(x)===pos).reduce((s,x)=>s+x.b,0)}
+function posFuer(d,art){return KPOS[art].filter(p=>d.art==='miete'?(art==='Ausgabe'||['Raummiete','Catering (wir bieten an)','Getränke','Sonstige Einnahmen'].includes(p)):p!=='Raummiete'&&(d.vvk||p!=='Eintritt Vorverkauf'))}
+// Ab wie vielen zahlenden Gästen trägt sich der Abend? (Plan ohne Eintritt und ohne Gage, dann Gäste hochzählen)
+function breakEven(d,preis){preis=+preis||0;if(d.art==='miete')return null;
+ const einOhne=posFuer(d,'Einnahme').filter(p=>!/^Eintritt/.test(p)).reduce((s,p)=>s+planW(d,p),0),
+  ausOhne=posFuer(d,'Ausgabe').filter(p=>p!=='Gagen'&&p!=='Künstlersozialabgabe').reduce((s,p)=>s+planW(d,p),0);
+ for(let n=0;n<=3000;n++){const ein=n*preis,gage=d.dtyp==='ohne'?planW(d,'Gagen'):bandAnteil(d,ein),ksa=KSA.satz?gage*(+KSA.satz)/100:0;
+  if(einOhne+ein-ausOhne-gage-ksa>=0)return n;if(!preis)break}return -1}
+function syncVD(e){if(e.cal!=='va')return;const v=vaName(e),x=VD[v],d=dl(e);if(!x)return;
+ x.kuenstler=d.partner;x.preis=d.preis;x.gtyp={fest:'fest',garantie:'anteil',tuer:'eintritt',ohne:'ohne'}[d.dtyp];if(d.dtyp==='fest')x.gage=d.gage;else if(d.dtyp==='garantie')x.gage=d.sockel;
+ if(FIN[v]&&(d.dtyp==='fest'||d.dtyp==='garantie')){FIN[v]=FIN[v].filter(f=>f.q!=='Gage laut GEMA und KSK');if(+x.gage)FIN[v].push({art:'Ausgabe',p:'Gage '+(x.kuenstler||'')+(d.dtyp==='garantie'?' (Garantie, Plan)':''),b:+x.gage,q:'Gage laut GEMA und KSK',kat:'Gagen'})}}
+function dInp(i,k,lbl,t,extra){const d=DEAL[i];return '<label'+(extra&&/grow/.test(extra)?' class="grow"':'')+'>'+lbl+'<input data-dl="'+k+'" data-ev="'+i+'" value="'+esc(d[k])+'" '+(t||'')+'></label>'}
+function dSel(i,k,lbl,obj){const d=DEAL[i];return '<label>'+lbl+'<select data-dl="'+k+'" data-ev="'+i+'">'+Object.keys(obj).map(o=>'<option value="'+o+'"'+(d[k]===o?' selected':'')+'>'+obj[o]+'</option>').join('')+'</select></label>'}
+function dChk(i,k,lbl){return '<label style="flex-direction:row;gap:6px;align-items:center;color:var(--fg)"><input type="checkbox" data-dl="'+k+'" data-ev="'+i+'"'+(DEAL[i][k]?' checked':'')+'> '+lbl+'</label>'}
+const NUM='type="number" min="0" step="0.01" style="width:110px"';
+function vDeal(){const e=E[S.ev];if(!e)return vStart();
+ if(!canDeal(e))return '<div class="wrap"><h1>Deal und Vertrag</h1><div class="box"><p>Diese Seite sehen Veranstaltungen und Finanzen (bei Vermietungen auch Vermietung).</p></div></div>';
+ const i=e.i,d=dl(e),v=e.cal==='va'?vaName(e):e.t,band=d.art!=='miete';
+ let h='<div class="wrap"><div class="crumb"><button class="link" data-act="nav" data-v="kalender">Kalender</button> › '+esc(v)+'</div><h1>Deal und Vertrag</h1><p class="sub">'+fd(e.d)+(e.von?', '+e.von+'–'+e.bis+' Uhr':'')+(e.o?' · '+esc(e.o):'')+'. Was hier steht, landet in der Kalkulation, an der Kasse, bei GEMA &amp; KSK und als Platzhalter im Vertrag. Beträge sehen nur Veranstaltungen und Finanzen.</p>';
+ h+='<section class="panel"><h3>Termin</h3><div class="row" style="align-items:flex-end">'+dSel(i,'art','Art',DART)+dInp(i,'vtyp','Veranstaltungs-Typ','placeholder="z. B. Konzert, Lesung"')+dInp(i,'genre','Genre','style="width:120px"')+dInp(i,'einlass','Einlass','type="time"')+'<label>Beginn<input value="'+esc(e.von||'')+'" disabled style="width:90px"></label>'+dInp(i,'ende','Ende','type="time"')+'</div></section>';
+ h+='<section class="panel"><h3>'+(band?'Band / Veranstalter':'Mieter*in')+'</h3><div class="row" style="align-items:flex-end">'+dInp(i,'partner',band?'Band / Künstler*in':'Name','','grow')+dInp(i,'firma','Firma / Verein','','grow')+dInp(i,'ansprech','Ansprechperson','','grow')+'</div><div class="row" style="align-items:flex-end;margin-top:8px">'+dInp(i,'str','Straße','','grow')+dInp(i,'ort','PLZ / Ort','','grow')+dInp(i,'mail','E-Mail','type="email"','grow')+'</div><p class="muted" style="font-size:13px">Nur so viele Kontaktdaten, wie der Vertrag braucht.</p></section>';
+ if(band){h+='<section class="panel"><h3>Eintritt</h3><div class="row" style="align-items:flex-end">'+dInp(i,'preis','Eintritt AK (€)',NUM)+dInp(i,'erm','ermäßigt (€)',NUM)+dChk(i,'vvk','Vorverkauf')+(d.vvk?dInp(i,'vvkPreis','VVK (€)',NUM)+dInp(i,'vvkKont','VVK-Kontingent','type="number" min="0" style="width:100px"'):'')+'</div></section>';
+  h+='<section class="panel"><h3>Deal</h3><div class="row" style="align-items:flex-end">'+dSel(i,'dtyp','Gage-Art',DTYP)+
+  (d.dtyp==='fest'?dInp(i,'gage','Gage (€)',NUM):'')+(d.dtyp==='garantie'?dInp(i,'sockel','Garantie / Sockel (€)',NUM)+dInp(i,'pBand','Prozent für die Band',NUM)+dInp(i,'kosten','vorher abziehen: Kosten (€)',NUM):'')+
+  (d.dtyp==='tuer'?dInp(i,'pBand','Prozent vom Eintritt (leer = alles)',NUM):'')+dInp(i,'gtext','Bemerkung zur Gage','placeholder="z. B. plus 7 % MwSt, gegen Quittung"','grow')+'</div>'+
+  (d.dtyp==='garantie'?'<p class="muted" style="font-size:13px">Die Band bekommt den höheren Betrag: '+eur(+d.sockel||0)+' Garantie oder '+(+d.pBand||0)+' % vom Eintritt nach '+eur(+d.kosten||0)+' Kosten. Beispiel bei '+(d.erw||100)+' zahlenden Gästen: '+eur(bandAnteil(d,(+d.erw||100)*(+d.preis||0)))+'. Die Kasse rechnet das am Abend von selbst.</p>':'')+'</section>';
+  h+='<section class="panel"><h3>Betreuung</h3><div class="row" style="align-items:flex-end">'+dSel(i,'unterk','Übernachtung',UNTERK)+dInp(i,'unterkBem','Bemerkung','placeholder="z. B. Hotel Goethe, 3 DZ, 2 EZ"','grow')+dSel(i,'cat','Catering für die Band',CATB)+(d.cat==='pauschale'?dInp(i,'catPreis','Pauschale (€)',NUM):'')+dInp(i,'reise','Reisekosten (€)',NUM)+'</div></section>'}
+ else{h+='<section class="panel"><h3>Mietzins</h3><div class="row" style="align-items:flex-end">'+dInp(i,'mStart','Mietzeit von','type="time"')+dInp(i,'mEnde','bis','type="time"')+dInp(i,'miete','Raummiete (€)',NUM)+dInp(i,'pa','PA / Anlage (€)',NUM)+dInp(i,'techniker','Technik-Personal (€)',NUM)+dInp(i,'ordner','Ordner*innen (€)',NUM)+dInp(i,'mcat','Catering (€)',NUM)+dInp(i,'licht','Licht (€)',NUM)+dInp(i,'msonst','Sonstiges (€)',NUM)+
+  '<label>MwSt<select data-dl="mw" data-ev="'+i+'">'+MWST.map(m=>'<option value="'+m+'"'+(d.mw===m?' selected':'')+'>'+(m||'– Finanzen klärt –')+'</option>').join('')+'</select></label></div><p><strong>Summe netto: '+eur(mSumme(d))+'</strong>'+(d.mw==='19 %'||d.mw==='7 %'?' · MwSt '+d.mw+': '+eur(mSumme(d)*parseInt(d.mw)/100)+' · brutto '+eur(mSumme(d)*(1+parseInt(d.mw)/100)):'')+'</p>'+
+  '<div class="row" style="align-items:flex-end">'+dInp(i,'pVer','oder Prozente vom Eintritt für uns',NUM)+'</div></section>'}
+ h+='<section class="panel"><h3>Catering, das wir anbieten</h3><div class="row" style="align-items:flex-end">'+dChk(i,'catWir','Wir machen Catering für Gäste (z. B. Foodtruck)')+(d.catWir?dInp(i,'catWirPreis','Preis (€)',NUM):'')+'</div></section>';
+ h+='<section class="panel"><h3>Sonstiges und Freifelder</h3><label class="grow">Sonstige Vereinbarungen<textarea data-dl="vereinb" data-ev="'+i+'" rows="2">'+esc(d.vereinb)+'</textarea></label><div class="row" style="align-items:flex-end;margin-top:8px">'+
+  FF.map(n=>'<label>'+esc(n)+'<input data-dlf="'+esc(n)+'" data-ev="'+i+'" value="'+esc(d.ff[n]||'')+'"></label>').join('')+'</div>'+
+  '<form class="inline" data-form="ffneu" style="margin-top:8px"><label>Neues Freifeld für alle Termine<input id="ff-n" required placeholder="z. B. Merch-Stand"></label><button>Freifeld anlegen</button></form></section>';
+ h+=kalkHtml(e,d,v);
+ h+='<section class="panel"><h3>Vertrag</h3><div class="row" style="align-items:flex-end">'+dSel(i,'vstat','Stand',VSTAT)+'<label>Vertragsnummer<input value="'+esc(d.vnr||'kommt beim Erzeugen')+'" disabled style="width:150px"></label><button class="primary" data-act="vertrag" data-ev="'+i+'">Vertrag erzeugen</button></div><p class="muted" style="font-size:13px">Die App füllt die Vorlage mit den Feldern oben. Was fehlt, ist rot markiert. Ein Mensch prüft, bevor er rausgeht.</p></section>';
+ return h+'</div>'}
+function kalkHtml(e,d,v){const isVa=e.cal==='va'&&FIN[v],row=(art,p)=>{const pl=planW(d,p),auto=d.plan[p]===undefined||d.plan[p]==='',ist=isVa?istW(v,p):0;
+  return '<tr><td>'+esc(p)+'</td><td><input data-dlp="'+esc(p)+'" data-ev="'+e.i+'" type="number" step="0.01" min="0" style="width:110px" value="'+(pl?pl:'')+'"'+(auto&&pl?' title="von selbst aus dem Deal"':'')+'>'+(auto&&pl?' <span class="chip">auto</span>':'')+'</td><td>'+(isVa?(ist?eur(ist):'–'):'')+'</td></tr>'};
+ const sum=(art,f)=>posFuer(d,art).reduce((s,p)=>s+f(p),0),pE=sum('Einnahme',p=>planW(d,p)),pA=sum('Ausgabe',p=>planW(d,p)),iE=isVa?sum('Einnahme',p=>istW(v,p)):0,iA=isVa?sum('Ausgabe',p=>istW(v,p)):0;
+ const be=breakEven(d,d.preis),beV=d.vvk?breakEven(d,d.vvkPreis):null;
+ let h='<section class="panel"><h3>Kalkulation (Plan und Ist)</h3><div class="row" style="align-items:flex-end">'+(d.art!=='miete'?dInp(e.i,'erw','Erwartete zahlende Gäste','type="number" min="0" style="width:110px"'):'')+
+  (isMem('fi',S.me)?'<label>Satz Künstlersozialabgabe (%)<input data-ksa="1" type="number" step="0.1" min="0" style="width:90px" value="'+esc(KSA.satz)+'" placeholder="jährlich"></label>':'<span class="muted" style="font-size:13px">Satz Künstlersozialabgabe: '+(KSA.satz?KSA.satz+' %':'trägt Finanzen ein')+'</span>')+'</div>';
+ if(be!==null)h+='<div class="box" style="margin-top:10px"><p><strong>Break-Even:</strong> '+(d.dtyp==='tuer'?'Der Eintritt geht an die Band. Der Abend trägt sich über Getränke und Essen: Plan-Ergebnis ohne Eintritt '+eur(pE-pA):!(+d.preis)?'Ohne Eintritt. Plan-Ergebnis: '+eur(pE-pA):be<0?'Mit diesem Plan trägt sich der Abend auch mit 3000 Gästen nicht.':'Ab <strong>'+be+' zahlenden Gästen</strong> an der Abendkasse ('+eur(+d.preis)+')'+(beV!==null&&beV>=0?' oder ab <strong>'+beV+'</strong> im Vorverkauf ('+eur(+d.vvkPreis)+')':'')+' trägt sich der Abend.')+'</p></div>';
+ h+='<div class="scroll" style="margin-top:10px"><table><thead><tr><th>Einnahmen</th><th>Plan (€)</th><th>'+(isVa?'Ist':'')+'</th></tr></thead><tbody>'+posFuer(d,'Einnahme').map(p=>row('Einnahme',p)).join('')+'<tr><th>Summe</th><th>'+eur(pE)+'</th><th>'+(isVa?eur(iE):'')+'</th></tr></tbody></table></div>';
+ h+='<div class="scroll" style="margin-top:10px"><table><thead><tr><th>Ausgaben</th><th>Plan (€)</th><th>'+(isVa?'Ist':'')+'</th></tr></thead><tbody>'+posFuer(d,'Ausgabe').map(p=>row('Ausgabe',p)).join('')+'<tr><th>Summe</th><th>'+eur(pA)+'</th><th>'+(isVa?eur(iA):'')+'</th></tr></tbody></table></div>';
+ h+='<p><strong>Saldo Plan: '+eur(pE-pA)+'</strong>'+(isVa?' · <strong>Ist: '+eur(iE-iA)+'</strong> <span class="muted" style="font-size:13px">(Ist kommt aus Finanzen und der Kassenabrechnung)</span>':'')+'</p>'+
+  (e.cal==='va'&&VD[v]&&VD[v].gema?'<p class="muted" style="font-size:13px">GEMA-pflichtig: Den Betrag trägt Finanzen ein, sobald die Rechnung da ist.</p>':'')+'</section>';
+ return h}
+// Vertragsvorlagen: Platzhalter in doppelten geschweiften Klammern, z. B. {{Band}}. Alle Entwürfe, rechtlich prüfen lassen.
+const VORL={
+ band:{n:'Auftrittsvertrag Band / Künstler*in',t:'AUFTRITTSVERTRAG (ENTWURF, rechtlich prüfen lassen)\nVertragsnummer {{Vertragsnummer}} vom {{Vertragsdatum}}\n\nzwischen dem {{Verein}}, {{Verein Anschrift}}, im {{Haus}} (Veranstalter)\nund {{Band}}, {{Firma}}, vertreten durch {{Ansprechperson}}, {{Straße}}, {{PLZ / Ort}}, {{E-Mail}} (Künstler*in)\n\n§ 1 Auftritt\n{{Veranstaltungs-Typ}} „{{Veranstaltung}}“ am {{Wochentag}}, {{Datum}}, Ort: {{Ort}}. Einlass {{Einlass}} Uhr, Beginn {{Beginn}} Uhr, Ende {{Ende}} Uhr.\n\n§ 2 Eintritt\nEintritt an der Abendkasse {{Eintritt AK}} €, ermäßigt {{Eintritt ermäßigt}} €. Vorverkauf: {{Vorverkauf}} ({{Eintritt VVK}} €, Kontingent {{VVK-Kontingent}}). Der Veranstalter stellt die Kasse.\n\n§ 3 Gage\nGage-Art: {{Gage-Art}}. {{Gage-Regel}} {{Gage-Bemerkung}}\nReisekosten: {{Reisekosten}} €.\n\n§ 4 Betreuung\nÜbernachtung: {{Unterkunft}} ({{Unterkunft Bemerkung}}). Catering: {{Catering}}.\n\n§ 5 GEMA\nDer Veranstalter meldet die Veranstaltung bei der GEMA an. Die Künstler*in gibt dem Veranstalter spätestens am Tag nach dem Auftritt eine vollständige Setlist.\n\n§ 6 Sonstiges\n{{Sonstige Vereinbarungen}}\n\nDuisburg, {{Vertragsdatum}}\n\n______________________          ______________________\nfür den Verein                  für die Künstler*in'},
+ koop:{n:'Kooperation mit externem Veranstalter',t:'KOOPERATIONSVEREINBARUNG (ENTWURF, rechtlich prüfen lassen)\nVertragsnummer {{Vertragsnummer}} vom {{Vertragsdatum}}\n\nzwischen dem {{Verein}}, {{Verein Anschrift}}, im {{Haus}}\nund {{Firma}}, {{Ansprechperson}}, {{Straße}}, {{PLZ / Ort}}, {{E-Mail}} (Veranstalter)\n\n§ 1 Veranstaltung\n„{{Veranstaltung}}“ ({{Veranstaltungs-Typ}}, {{Genre}}) am {{Wochentag}}, {{Datum}}, {{Ort}}. Einlass {{Einlass}}, Beginn {{Beginn}}, Ende {{Ende}} Uhr.\n\n§ 2 Eintritt und Aufteilung\nEintritt {{Eintritt AK}} € (ermäßigt {{Eintritt ermäßigt}} €). Vorverkauf: {{Vorverkauf}}. {{Gage-Regel}}\n\n§ 3 GEMA\nDie GEMA-Anmeldung übernimmt der Verein, die Setlist liefert der Veranstalter.\n\n§ 4 Sonstiges\n{{Sonstige Vereinbarungen}}\n\n______________________          ______________________\nfür den Verein                  für den Veranstalter'},
+ miete_fest:{n:'Mietvertrag Festmiete',t:'MIETVERTRAG (ENTWURF, rechtlich prüfen lassen)\nVertragsnummer {{Vertragsnummer}} vom {{Vertragsdatum}}\n\nVermieter: {{Verein}}, {{Verein Anschrift}}\nMieter*in: {{Name}}, {{Firma}}, {{Ansprechperson}}, {{Straße}}, {{PLZ / Ort}}, {{E-Mail}}\n\n§ 1 Mietsache\nRaum „{{Ort}}“ im {{Haus}}.\n\n§ 2 Mietzeit\nAm {{Wochentag}}, {{Datum}}, von {{Mietzeit von}} bis {{Mietzeit bis}} Uhr.\n\n§ 3 Mietzins\nRaummiete {{Raummiete}} €, PA {{PA}} €, Technik-Personal {{Technik-Personal}} €, Ordner*innen {{Ordner}} €, Catering {{Catering-Kosten}} €, Licht {{Licht}} €, Sonstiges {{Sonstiges}} €.\nSumme netto {{Summe netto}} €, Mehrwertsteuer {{MwSt-Satz}}: {{MwSt-Betrag}} €, gesamt {{Summe brutto}} €.\n\n§ 4 Sonstiges\n{{Sonstige Vereinbarungen}}\n\n______________________          ______________________\nVermieter                       Mieter*in'},
+ miete_proz:{n:'Mietvertrag Prozente',t:'MIETVERTRAG MIT BETEILIGUNG (ENTWURF, rechtlich prüfen lassen)\nVertragsnummer {{Vertragsnummer}} vom {{Vertragsdatum}}\n\nVermieter: {{Verein}}, {{Verein Anschrift}}\nMieter*in: {{Name}}, {{Firma}}, {{Straße}}, {{PLZ / Ort}}\n\n§ 1 Mietsache und Mietzeit\nRaum „{{Ort}}“ am {{Datum}} von {{Mietzeit von}} bis {{Mietzeit bis}} Uhr.\n\n§ 2 Eintritt\nDie Mieter*in erhebt einen Eintritt von {{Eintritt AK}} €. Der Verein stellt die Kasse.\n\n§ 3 Miete\nDer Verein erhält {{Prozente Verein}} % der Eintrittseinnahmen, mindestens {{Raummiete}} €.\n\n§ 4 Sonstiges\n{{Sonstige Vereinbarungen}}\n\n______________________          ______________________\nVermieter                       Mieter*in'},
+ eintritt:{n:'Vereinbarung Eintritt an die Band',t:'VEREINBARUNG ZUM EINTRITT (ENTWURF)\n\nVeranstaltung: {{Veranstaltung}}, {{Datum}}, {{Ort}}\nBand / Künstler*in: {{Band}}, Ansprechperson {{Ansprechperson}}\n\nEintritt: {{Eintritt AK}} €. {{Gage-Regel}}\nSetlist: Die Band gibt dem Verein bis zum Tag nach dem Auftritt eine vollständige Setlist.\nGEMA: Der Verein meldet die Veranstaltung bei der GEMA an und trägt die GEMA-Kosten (Vorschlag, im Team entscheiden).\n\n______________________          ______________________\nVerein                          Band'}};
+function gageRegel(d){if(d.dtyp==='fest')return 'Die Künstler*in erhält eine feste Gage von '+zahl(d.gage)+' €.';
+ if(d.dtyp==='garantie')return 'Die Künstler*in erhält '+(+d.pBand||0)+' % der Eintrittseinnahmen nach Abzug von '+zahl(d.kosten)+' € Kosten, mindestens jedoch '+zahl(d.sockel)+' € (Garantie).';
+ if(d.dtyp==='tuer')return 'Die Künstler*in erhält '+(d.pBand===''?'den gesamten Eintritt':(+d.pBand)+' % des Eintritts')+' gegen Quittung. Die Getränke-Einnahmen bleiben beim Verein.';
+ return 'Es wird keine Gage gezahlt.'}
+function phWerte(e,d){const n=x=>x===''||x==null?'':zahl(x),ms=mSumme(d),mwp=d.mw==='19 %'||d.mw==='7 %'?parseInt(d.mw):0;
+ const w={'Datum':e.d.slice(8)+'.'+e.d.slice(5,7)+'.'+e.d.slice(0,4),'Wochentag':['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'][(dt(e.d).getDay()+6)%7],'Veranstaltung':e.t.replace(/^Saal: /,''),'Ort':e.o||'','Beginn':e.von||'','Einlass':d.einlass,'Ende':d.ende,
+  'Veranstaltungs-Typ':d.vtyp,'Genre':d.genre,'Band':d.partner,'Name':d.partner,'Firma':d.firma,'Ansprechperson':d.ansprech,'Straße':d.str,'PLZ / Ort':d.ort,'E-Mail':d.mail,
+  'Eintritt AK':n(d.preis),'Eintritt ermäßigt':n(d.erm),'Vorverkauf':d.vvk?'ja':'nein','Eintritt VVK':d.vvk?n(d.vvkPreis):'–','VVK-Kontingent':d.vvk?d.vvkKont:'–',
+  'Gage-Art':DTYP[d.dtyp],'Gage':n(d.gage),'Garantie':n(d.sockel),'Prozente Band':d.pBand,'Abzugskosten':n(d.kosten),'Gage-Regel':gageRegel(d),'Gage-Bemerkung':d.gtext,'Reisekosten':n(d.reise||'0'),
+  'Unterkunft':UNTERK[d.unterk],'Unterkunft Bemerkung':d.unterk==='keine'?'–':d.unterkBem,'Catering':CATB[d.cat]+(d.cat==='pauschale'?' '+n(d.catPreis)+' €':''),
+  'Mietzeit von':d.mStart,'Mietzeit bis':d.mEnde,'Raummiete':n(d.miete),'PA':n(d.pa||'0'),'Technik-Personal':n(d.techniker||'0'),'Ordner':n(d.ordner||'0'),'Catering-Kosten':n(d.mcat||'0'),'Licht':n(d.licht||'0'),'Sonstiges':n(d.msonst||'0'),
+  'Summe netto':n(ms),'MwSt-Satz':d.mw,'MwSt-Betrag':d.mw?n(ms*mwp/100):'','Summe brutto':d.mw?n(ms*(1+mwp/100)):'','Prozente Verein':d.pVer,
+  'Sonstige Vereinbarungen':d.vereinb||'keine','Vertragsnummer':d.vnr,'Vertragsdatum':d.vdat?d.vdat.slice(8)+'.'+d.vdat.slice(5,7)+'.'+d.vdat.slice(0,4):'','Verein':VEREIN.name,'Verein Anschrift':VEREIN.anschrift,'Haus':VEREIN.haus};
+ FF.forEach(f=>w['Freifeld: '+f]=d.ff[f]||'');return w}
+function vVertrag(){const e=E[S.ev];if(!e||!canDeal(e))return vStart();const d=dl(e),w=phWerte(e,d),k=S.vo||(d.art==='miete'?'miete_fest':d.art==='koop'?'koop':d.dtyp==='tuer'?'eintritt':'band'),vo=VORL[k];
+ let fehlt=0;const txt=esc(vo.t).replace(/\{\{([^}]+)\}\}/g,(m,p)=>{const x=w[p];if(x===undefined||x===''){fehlt++;return '<mark class="fehlt">['+esc(p)+' fehlt]</mark>'}return '<b>'+esc(x)+'</b>'});
+ let h='<div class="wrap zettel"><div class="noprint"><div class="crumb"><button class="link" data-act="deal" data-ev="'+e.i+'">Deal und Vertrag</button> › Vertrag</div>'+
+  '<div class="row" style="align-items:flex-end;margin-bottom:10px"><label>Vorlage<select data-vo="1">'+Object.keys(VORL).map(x=>'<option value="'+x+'"'+(x===k?' selected':'')+'>'+esc(VORL[x].n)+'</option>').join('')+'</select></label>'+
+  '<button class="primary" onclick="window.print()">Drucken / als PDF</button><button data-act="form" data-f="vorl">Vorlage bearbeiten</button><button data-act="form" data-f="phl">Platzhalter-Liste</button></div>'+
+  (fehlt?'<div class="box"><p><strong>'+fehlt+' Angaben fehlen</strong> (rot markiert). Bitte im Deal ergänzen'+(VEREIN.anschrift?'':', die Vereinsanschrift unten unter „Platzhalter-Liste“')+'.</p></div>':'<div class="box"><p>Alle Platzhalter sind gefüllt. Bitte trotzdem lesen, bevor der Vertrag rausgeht.</p></div>')+
+  (S.form==='vorl'?'<form class="inline panel" data-form="vorl" data-k="'+k+'" style="flex-direction:column;align-items:stretch"><label class="grow">Vorlage „'+esc(vo.n)+'“ (Platzhalter in {{…}})<textarea id="vo-t" rows="14">'+esc(vo.t)+'</textarea></label><button class="primary">Vorlage speichern</button><p class="muted" style="font-size:13px">In echt liegt die Vorlage als Word-Datei in SharePoint. Welcher Weg, klärt die Runde.</p></form>':'')+
+  (S.form==='phl'?'<section class="panel"><h3>Alle Platzhalter</h3><form class="inline" data-form="verein"><label class="grow">Anschrift des Vereins<input id="ve-a" value="'+esc(VEREIN.anschrift)+'" placeholder="Straße, PLZ Ort"></label><button>Speichern</button></form><div class="scroll"><table><thead><tr><th>Platzhalter</th><th>Wert bei diesem Termin</th></tr></thead><tbody>'+Object.keys(w).map(p=>'<tr><td><code>{{'+esc(p)+'}}</code></td><td>'+(w[p]===''?'<span class="chip warn">leer</span>':esc(w[p]))+'</td></tr>').join('')+'</tbody></table></div></section>':'')+'</div>';
+ h+='<div class="vtext">'+txt+'</div>';
+ return h+'</div>'}
+dealSeed();
+
 function render(){let v;
  if(!S.me)v=vLogin();
- else v=header()+({start:vStart,bereich:vBereich,aufgabe:vAufgabe,neu:vNeu,kalender:vKalender,inventar:vInventar,einkauf:vEinkauf,finanzen:vFinanzen,gema:vGema,zettel:vZettel,presse:vPresse,externe:vExterne,zeiten:vZeiten,runde:vRunde,hilfe:vHilfe}[S.view]||vStart)();
+ else v=header()+({start:vStart,bereich:vBereich,aufgabe:vAufgabe,neu:vNeu,kalender:vKalender,inventar:vInventar,einkauf:vEinkauf,finanzen:vFinanzen,gema:vGema,zettel:vZettel,deal:vDeal,vertrag:vVertrag,presse:vPresse,externe:vExterne,zeiten:vZeiten,runde:vRunde,hilfe:vHilfe}[S.view]||vStart)();
  $('#app').innerHTML=v;if(S.view==='presse')spDraw()}
 
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el||el.tagName==='SELECT'||el.type==='checkbox')return;
@@ -911,6 +1045,8 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
  else if(act==='rki'){a.rider.ki=true;a.log.unshift({p:'ki',t:'Tech-Rider ausgewertet (Entwurf), angefragt von '+pn(S.me),am:now()});toast('Die KI hat einen Entwurf erstellt.');render()}
  else if(act==='rok'){const neu=RIDER.filter(x=>x[3]);a.rider.ok=true;a.rider.okVon=S.me;neu.forEach(x=>T({t:x[3],b:a.b,parent:a.id,art:/Essen/.test(x[3])?'Einkauf':'Büro',frist:'2026-11-25',ks:a.ks}));if(a.fs==='offen')a.fs='arbeit';logA(a,'KI-Entwurf geprüft, '+neu.length+' Teilaufgaben angelegt');toast(neu.length+' Teilaufgaben angelegt.');render()}
  else if(act==='rweg'){a.rider.ki=false;logA(a,'KI-Entwurf verworfen');render()}
+ else if(act==='deal')go('deal',{ev:+d.ev});
+ else if(act==='vertrag'){const x=dl(E[+d.ev]);if(!x.vnr){x.vnr=String(++vnr).padStart(5,'0');x.vdat=HEUTE}if(x.vstat==='keiner')x.vstat='entwurf';go('vertrag',{ev:+d.ev,vo:''})}
  else if(act==='hilfe'){const t=A.find(y=>y.id===+d.id),x=t&&t.hilfe[+d.i];if(!x)return;x.st=d.z;
   if(d.z==='hilft'){if(t.p!==S.me&&!t.mit.includes(S.me))t.mit.push(S.me);logA(t,pn(S.me)+' hilft');toast('Danke! '+pn(x.von)+' bekommt sofort Bescheid. Du stehst jetzt bei „Weitere Personen“.')}
   else{logA(t,pn(S.me)+' kann gerade nicht helfen');toast(pn(x.von)+' bekommt sofort Bescheid und kann jemand anderen fragen.')}render()}
@@ -932,7 +1068,12 @@ document.addEventListener('change',e=>{const el=e.target,d=el.dataset,a=S.a&&A.f
  else if(d.act==='kvon'||d.act==='kzweit'){KASSE[VERANST[+d.va]][d.act==='kvon'?'von':'zweit']=el.value}
  else if(d.act==='kmw'){KASSE[VERANST[+d.va]].mw[d.ks]=el.value}
  else if(d.cf){S.cf[d.cf]=el.value;render()}
- else if(d.vd){const v=VERANST[+d.va],x=VD[v];x[d.vd]=el.type==='checkbox'?el.checked:el.value;if(d.vd==='gema'&&x.gema&&x.setlist==='nicht')x.setlist='offen';
+ else if(d.dl){const ev=E[+d.ev],x=dl(ev);x[d.dl]=el.type==='checkbox'?el.checked:el.value;syncVD(ev);render()}
+ else if(d.dlp){dl(E[+d.ev]).plan[d.dlp]=el.value;render()}
+ else if(d.dlf){dl(E[+d.ev]).ff[d.dlf]=el.value}
+ else if(d.ksa){KSA.satz=el.value;render()}
+ else if(d.vo){S.vo=el.value;S.form='';render()}
+ else if(d.vd){const v=VERANST[+d.va],x=VD[v];x[d.vd]=el.type==='checkbox'?el.checked:el.value;{const dd=dealVon(v);if(dd){if(d.vd==='preis')dd.preis=el.value;if(d.vd==='kuenstler')dd.partner=el.value}}if(d.vd==='gema'&&x.gema&&x.setlist==='nicht')x.setlist='offen';
   if((d.vd==='gage'||d.vd==='gtyp')&&(x.gtyp==='fest'||x.gtyp==='anteil')){FIN[v]=FIN[v].filter(f=>f.q!=='Gage laut GEMA und KSK');if(+x.gage)FIN[v].push({art:'Ausgabe',p:'Gage '+(x.kuenstler||''),b:+x.gage,q:'Gage laut GEMA und KSK'})}render()}
  else if(d.act==='erl'&&a){a.erl=el.value;logA(a,'Abhaken: '+ERL[a.erl]);render()}
  else if(d.act==='mitadd'&&a&&el.value){a.mit.push(el.value);logA(a,pn(el.value)+' dazugenommen');render()}
@@ -950,7 +1091,10 @@ document.addEventListener('input',e=>{const el=e.target,d=el.dataset;
  else{kk[d.kz][d.c]=Math.max(0,Math.floor(+el.value||0));set('kz-'+s+'-'+d.kz+'-'+d.c,cent(d.c*kk[d.kz][d.c]))}
  const r=kCalc(kk);set('kz-'+s+'-sa',cent(r.a));set('kz-'+s+'-se',cent(r.e));set('kz-'+s+'-erg',ergHtml(r,s))});
 document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.dataset,a=S.a&&A.find(x=>x.id===S.a),val=id=>(document.getElementById(id)||{}).value;
- if(d.form==='hilfe'){const pp=val('hi-p'),tx=(val('hi-t')||'').trim();if(!pp||!tx)return;a.hilfe.push({von:S.me,an:pp,t:tx,am:now(),st:'offen'});logA(a,'Hilfe angefordert bei '+pn(pp));S.form='';toast(pn(pp)+' bekommt sofort eine E-Mail und eine Teams-Nachricht.');render()}
+ if(d.form==='ffneu'){const n=(val('ff-n')||'').trim();if(n&&!FF.includes(n))FF.push(n);toast('Freifeld „'+n+'“ gibt es jetzt bei allen Terminen und als Platzhalter im Vertrag.');render()}
+ else if(d.form==='vorl'){VORL[d.k].t=val('vo-t');S.form='';toast('Vorlage gespeichert.');render()}
+ else if(d.form==='verein'){VEREIN.anschrift=(val('ve-a')||'').trim();toast('Anschrift gespeichert.');render()}
+ else if(d.form==='hilfe'){const pp=val('hi-p'),tx=(val('hi-t')||'').trim();if(!pp||!tx)return;a.hilfe.push({von:S.me,an:pp,t:tx,am:now(),st:'offen'});logA(a,'Hilfe angefordert bei '+pn(pp));S.form='';toast(pn(pp)+' bekommt sofort eine E-Mail und eine Teams-Nachricht.');render()}
  else if(d.form==='vfrag'){const pp=val('vf-p');if(!pp)return;M.push({b:d.b,p:pp,r:'Vertretung',f:true,seit:HEUTE,status:'gefragt',von:S.me});S.form='';toast(pn(pp)+' wurde gefragt und sieht die Anfrage auf der Startseite.');render()}
  else if(d.form==='kommentar'){const t=val('km').trim();if(!t)return;a.k.push({p:S.me,t,am:now()});
   if(a.fn&&!a.fg&&S.fv==='kommentar'&&/^Freigegeben:/i.test(t)){a.fg={von:S.me,am:now(),art:'kommentar'};logA(a,'Freigegeben (Kommentar)');toast('Als Freigabe übernommen.')}render()}
@@ -965,7 +1109,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.d
    notiz:'Bestell-Mail (Entwurf) an '+bei+': Hallo, wir möchten für unsere Veranstaltung „'+va+'“ '+m+' × '+n+' mieten. Bitte schickt uns ein Angebot mit Preis, Abholung und Rückgabe. Viele Grüße, '+pn(S.me)+' (SGDV e.V.)'});
   toast('Aufgabe zum Zumieten angelegt, mit Bestell-Mail.');render()}
  else if(d.form==='kasse'){/* Enter in einem Zählfeld schließt nicht ab, nur der Knopf */}
- else if(d.form==='fin'){const i=+d.va,v=VERANST[i];FIN[v].push({art:val('fi-a-'+i),p:val('fi-p-'+i),b:Math.round((+val('fi-b-'+i)||0)*100)/100,q:'eingetragen von '+pn(S.me)});toast('Eingetragen.');render()}
+ else if(d.form==='fin'){const i=+d.va,v=VERANST[i];const kk=val('fi-k-'+i).split('|'),no=(val('fi-p-'+i)||'').trim();FIN[v].push({art:kk[0],kat:kk[1],p:kk[1]+(no?': '+no:''),b:Math.round((+val('fi-b-'+i)||0)*100)/100,q:'eingetragen von '+pn(S.me)});toast('Eingetragen.');render()}
  else if(d.form==='invneu'){INV.push({id:invId++,pr:val('in-pr')||'',mb:+val('in-mb')||0,k:val('in-k'),n:val('in-n'),m:Math.max(1,+val('in-m')||1),o:val('in-o')||'noch festlegen',res:[]});toast('Ins Inventar aufgenommen.');render()}
  else if(d.form==='ekneu'){EK.push({id:ekId++,n:val('ek-n'),m:Math.max(1,+val('ek-m')||1),grund:'gebraucht',quelle:'eingetragen',o:'',von:S.me,am:'19.11.'});toast('Steht auf der Einkaufsliste.');render()}
  else if(d.form==='ext'){EX.push({id:EX.length+1,n:val('ex-n'),f:val('ex-f'),k:val('ex-k'),kond:val('ex-c')||'nach Absprache',notiz:val('ex-o')});toast('Hinzugefügt.');render()}
