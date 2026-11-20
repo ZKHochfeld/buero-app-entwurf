@@ -204,7 +204,7 @@ T({t:'Ordnungsamt: Straßenfest im Frühjahr anmelden',b:'vb',p:'alex',frist:'20
 T({t:'Bastelnachmittag am 26.11. vorbereiten',b:'kj',p:'sam',frist:'2026-11-25',fs:'arbeit'});
 T({t:'Bastelmaterial einkaufen',b:'kj',art:'Einkauf',p:'mira',frist:'2026-11-24'});
 const ft=T({t:'Foodtruck beim Nachbarschaftsfest am 28.11. (Beispiel)',b:'ft',p:'deniz',frist:'2026-11-28',fs:'arbeit',fn:true,
- notiz:'Beispielvorgang aus der Vorlage „Foodtruck-Einsatz“. Die Zusage nach außen braucht eine Freigabe.',
+ notiz:'Beispielvorgang aus der Vorlage „Foodtruck-Einsatz“. Die Zusage nach außen braucht eine Freigabe.',vl:1,
  pack:[{t:'Kochlöffel und Kellen',ok:true},{t:'Kabeltrommel',ok:false},{t:'Wasserkanister',ok:false},{t:'Müllbeutel',ok:true},{t:'Kasse und Wechselgeld',ok:false},{t:'Handschuhe und Desinfektion',ok:false}]});
 T({t:'Anfrage aufnehmen: wer, wann, wo, wie viele Gäste',b:'ft',parent:ft.id,p:'deniz',fs:'erledigt',frist:'2026-11-18'});
 T({t:'Stellplatz klären: Breite und Länge, Zufahrt',b:'ft',parent:ft.id,p:'deniz',fs:'arbeit',frist:'2026-11-21'});
@@ -540,7 +540,10 @@ function vAufgabe(){const a=A.find(x=>x.id===S.a),b=bb(a.b),me=S.me,par=a.parent
   h+='<h2>Teilaufgaben ('+kids.filter(open).length+' offen von '+kids.length+')</h2>'+(kids.length?'<section class="panel"><ul class="list">'+kids.map(k=>aItem(k)).join('')+'</ul></section>':'')+
   '<div style="margin-top:10px">'+(S.form==='teil'?formNeueAufgabe(b.id,a.id):'<button data-act="form" data-f="teil">Teilaufgabe hinzufügen</button>')+'</div>';
  }
- if(a.pack){h+='<h2>Packliste</h2><section class="panel">'+a.pack.map((x,i)=>'<label class="check" style="color:var(--fg);font-size:15px;flex-direction:row"><input type="checkbox" data-act="pack" data-i="'+i+'"'+(x.ok?' checked':'')+'><span class="'+(x.ok?'done':'')+'">'+esc(x.t)+'</span></label>').join('')+'</section>'}
+ if(a.pack){h+='<h2>Packliste</h2><section class="panel">'+a.pack.map((x,i)=>'<label class="check" style="color:var(--fg);font-size:15px;flex-direction:row"><input type="checkbox" data-act="pack" data-i="'+i+'"'+(x.ok?' checked':'')+'><span class="'+(x.ok?'done':'')+'">'+esc(x.t)+'</span></label>').join('')+
+  (()=>{const v=a.vl&&VL.find(y=>y.id===a.vl);return '<form class="inline" data-form="packneu"><label style="flex:1 1 220px">Fehlt etwas?<input id="pk-t" required placeholder="z. B. Verlängerungskabel" autocomplete="off"></label>'+
+  (v?'<label class="check" style="flex-direction:row;color:var(--fg);font-size:14px"><input type="checkbox" id="pk-v" checked> Auch in die Vorlage „'+esc(v.name)+'“ (für die nächsten Male)</label>':'')+
+  '<button class="primary">Hinzufügen</button></form>'})()+'</section>'}
  h+='<h2>Kommentare ('+a.k.length+')</h2><section class="panel">'+(a.k.length?'<ul class="list">'+a.k.map(k=>'<li><div class="main"><strong>'+esc(pn(k.p))+'</strong> <span class="muted" style="font-size:13px">'+esc(k.am)+'</span><div>'+esc(k.t)+'</div></div></li>').join('')+'</ul>':'<p class="muted">Noch keine Kommentare.</p>')+
  '<form class="inline" data-form="kommentar"><label class="grow">Kommentar<input id="km" required placeholder="Rückfrage oder Notiz für die Übergabe"></label><button>Senden</button></form></section>';
  h+='<h2>Verlauf</h2><section class="panel">'+(a.log.length?'<ul class="list">'+a.log.map(l=>'<li><div class="main"><span class="muted" style="font-size:13px">'+esc(l.am)+' · '+esc(pn(l.p))+'</span><div>'+esc(l.t)+'</div></div></li>').join('')+'</ul>':'<p class="muted">Noch keine Einträge.</p>')+'<p class="muted" style="font-size:13px">Die App schreibt hier von selbst mit, wer was geändert hat. Das hilft bei der Übergabe.</p></section>';
@@ -1007,7 +1010,7 @@ function serie(start,art,n){const d=dt(start),nth=Math.ceil(d.getDate()/7),wd=d.
  for(let k=0;k<n;k++){let x;
   if(art==='monat'){const m=new Date(d.getFullYear(),d.getMonth()+k,1),off=(wd-m.getDay()+7)%7;x=new Date(m.getFullYear(),m.getMonth(),1+off+7*(nth-1));if(x.getMonth()!==m.getMonth())x=new Date(m.getFullYear(),m.getMonth(),1+off+7*(nth-2))}
   else x=new Date(d.getFullYear(),d.getMonth(),d.getDate()+(art==='2wochen'?14:7)*k);r.push(iso(x))}return r}
-function vorgangAus(v,titel,dd){const par=T({ersteller:S.me,t:titel+': '+v.name,b:v.b,p:S.me,frist:dd,notiz:'Von selbst angelegt beim Kopieren des Termins (Vorlage „'+v.name+'“).',pack:v.items.filter(i=>i.typ==='Packliste').map(i=>({t:i.t,ok:false}))});
+function vorgangAus(v,titel,dd){const par=T({ersteller:S.me,t:titel+': '+v.name,b:v.b,p:S.me,frist:dd,notiz:'Von selbst angelegt beim Kopieren des Termins (Vorlage „'+v.name+'“).',pack:v.items.filter(i=>i.typ==='Packliste').map(i=>({t:i.t,ok:false})),vl:v.id});
  if(!par.pack.length)par.pack=null;logA(par,'Beim Kopieren des Termins angelegt');
  v.items.filter(i=>i.typ==='Schritt'||i.typ==='Anforderung').forEach(i=>T({t:(i.typ==='Anforderung'?'Klären: ':'')+i.t,b:v.b,parent:par.id,frist:dd}));
  v.items.filter(i=>i.typ==='Einsatz').forEach(i=>T({t:i.t,b:v.b,parent:par.id,art:'Einsatz',datum:dd,von:'14:00',bis:'18:00',frist:dd}));return par}
@@ -1235,13 +1238,17 @@ document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.d
   if(am.length>=x.m){S.invMsg='<strong>Schon belegt:</strong> '+esc(x.n)+' ist am '+fd(dd)+' reserviert für „'+esc(am[0].z)+'“. Sprich dich mit '+esc(pn(am[0].p))+' ab.';render()}
   else{x.res.push({d:dd,z,p:S.me});S.invMsg='';toast('Reserviert: '+x.n+', '+fd(dd)+'.');render()}}
  else if(d.form==='absage'){a.fs='abgesagt';a.grund=(val('ab-g')||'').trim();logA(a,a.grund?'Abgesagt: '+a.grund:'Abgesagt');S.form='';toast('Abgesagt. Steht jetzt in der Übersicht für die Runde.');render()}
+ else if(d.form==='packneu'&&a){const t=(val('pk-t')||'').trim();if(!t)return;a.pack.push({t,ok:false});logA(a,'Packliste ergänzt: '+t);
+  const cb=document.getElementById('pk-v'),v=a.vl&&VL.find(y=>y.id===a.vl);let m='Zur Packliste hinzugefügt.';
+  if(cb&&cb.checked&&v&&!v.items.some(i=>i.typ==='Packliste'&&i.t===t)){v.items.push({typ:'Packliste',t,von:S.me});m='Hinzugefügt, auch in der Vorlage „'+v.name+'“.'}
+  toast(m);render()}
  else if(d.form==='punkt'){const v=VL.find(x=>x.id===+d.v);v.items.push({typ:val('pt-typ-'+v.id),t:val('pt-text-'+v.id),von:S.me});toast('Ergänzt. Danke!');render()}
  else if(d.form==='aufgabe'){const art=val('na-art'),ein=['Einsatz','Theke'].includes(art),dd=val('na-d');
   const n=T({ersteller:S.me,t:val('na-t'),b:d.b||val('na-b'),parent:d.parent?+d.parent:null,art,frist:dd,datum:ein?dd:'',von:ein?val('na-von'):'',bis:ein?val('na-bis'):''});
   logA(n,'Angelegt');S.form='';toast('Angelegt.');if(!d.parent)go('aufgabe',{a:n.id});else render()}
  else if(d.form==='dauer'){const t=(val('da-t')||'').trim();if(!t)return;dauer(t,val('da-b'),val('da-r'),{wt:val('da-wt'),md:Math.min(28,Math.max(1,+val('da-md')||1))});daErzeugen();toast('Daueraufgabe angelegt. Nächstes Mal: '+fd(daNaechst(DA[DA.length-1]))+'.');render()}
  else if(d.form==='neu'){const v=VL.find(x=>x.id===+val('nv-v')),dd=val('nv-d');
-  const par=T({ersteller:S.me,t:val('nv-t'),b:v.b,p:S.me,frist:dd,fs:'arbeit',fn:true,notiz:'Angelegt aus der Vorlage „'+v.name+'“.',pack:v.items.filter(i=>i.typ==='Packliste').map(i=>({t:i.t,ok:false}))});
+  const par=T({ersteller:S.me,t:val('nv-t'),b:v.b,p:S.me,frist:dd,fs:'arbeit',fn:true,notiz:'Angelegt aus der Vorlage „'+v.name+'“.',pack:v.items.filter(i=>i.typ==='Packliste').map(i=>({t:i.t,ok:false})),vl:v.id});
   if(!par.pack.length)par.pack=null;logA(par,'Vorgang aus Vorlage „'+v.name+'“ angelegt');
   v.items.filter(i=>i.typ==='Schritt'||i.typ==='Anforderung').forEach(i=>T({t:(i.typ==='Anforderung'?'Klären: ':'')+i.t,b:v.b,parent:par.id,frist:dd}));
   v.items.filter(i=>i.typ==='Einsatz').forEach(i=>T({t:i.t,b:v.b,parent:par.id,art:'Einsatz',datum:dd,von:'14:00',bis:'18:00',frist:dd}));
