@@ -167,6 +167,7 @@ const M=[
  ['vb','alex','zuständig',1],['ft','deniz','zuständig',1],['ft','mira','Vertretung',1],['kj','sam','zuständig',1]
 ].map(x=>({b:x[0],p:x[1],r:x[2],f:!!x[3],seit:'2026-11-02',status:'aktiv'}));
 M.push({b:'pe',p:'mira',r:'zuständig',f:true,seit:'2026-11-18',status:'angefragt'});
+M.push({b:'ep',p:'sam',r:'Vertretung',f:true,seit:'2026-11-19',status:'gefragt',von:'deniz'});
 
 let nid=100;
 const A=[];
@@ -425,12 +426,12 @@ function vLogin(){return '<div class="wrap"><div class="login panel"><h1>Büro-A
 
 function vStart(){const me=S.me,mine=B.filter(b=>isMem(b.id,me));
  const my=A.filter(a=>a.p===me&&open(a)&&a.z!=='angefragt').sort((x,y)=>(x.frist||'9').localeCompare(y.frist||'9'));
- const req=A.filter(a=>a.p===me&&a.z==='angefragt');
+ const req=A.filter(a=>a.p===me&&a.z==='angefragt'),vreq=M.filter(m=>m.p===me&&m.status==='gefragt');
  const today=E.filter(e=>e.d===HEUTE);
  let h='<div class="wrap"><p class="sub">'+fd(HEUTE)+'2026</p><h1>Hallo '+esc(pn(me))+'</h1>';
  h+='<div class="row" style="margin-top:6px"><span class="muted">Meine Bereiche:</span>'+(mine.length?mine.map(b=>'<button class="chip" data-act="bereich" data-b="'+b.id+'">'+esc(b.name)+'</button>').join(''):'<span class="muted">noch keiner. Unten einen Bereich öffnen und beitreten.</span>')+'</div>';
  h+='<div class="cols" style="margin-top:14px"><section class="panel"><h3>Meine Aufgaben ('+my.length+')</h3>'+(my.length?'<ul class="list">'+my.map(a=>aItem(a,true)).join('')+'</ul>':'<p class="muted">Keine offenen Aufgaben.</p>')+'</section>';
- h+='<div style="display:flex;flex-direction:column;gap:14px;min-width:0"><section class="panel"><h3>Anfragen an mich ('+req.length+')</h3>'+(req.length?'<ul class="list">'+req.map(a=>'<li><div class="main"><button class="link" data-act="aufgabe" data-id="'+a.id+'">'+esc(a.t)+'</button><div class="muted" style="font-size:13px">'+fd(a.datum)+', '+a.von+'–'+a.bis+' Uhr · '+esc(bb(a.b).name)+'</div></div><div class="row"><button class="small primary" data-act="zusage" data-id="'+a.id+'" data-z="zugesagt">Zusagen</button><button class="small" data-act="zusage" data-id="'+a.id+'" data-z="abgesagt">Absagen</button></div></li>').join('')+'</ul>':'<p class="muted">Keine offenen Anfragen.</p>')+'</section>';
+ h+='<div style="display:flex;flex-direction:column;gap:14px;min-width:0"><section class="panel"><h3>Anfragen an mich ('+(req.length+vreq.length)+')</h3>'+(vreq.length?'<ul class="list">'+vreq.map(m=>'<li><div class="main"><button class="link" data-act="bereich" data-b="'+m.b+'">Vertretung für '+esc(bb(m.b).name)+'</button><div class="muted" style="font-size:13px">'+esc(pn(m.von))+' fragt dich</div></div><div class="row"><button class="small primary" data-act="vzusage" data-b="'+m.b+'" data-z="ja">Zusagen</button><button class="small" data-act="vzusage" data-b="'+m.b+'" data-z="nein">Absagen</button></div></li>').join('')+'</ul>':'')+(req.length?'<ul class="list">'+req.map(a=>'<li><div class="main"><button class="link" data-act="aufgabe" data-id="'+a.id+'">'+esc(a.t)+'</button><div class="muted" style="font-size:13px">'+fd(a.datum)+', '+a.von+'–'+a.bis+' Uhr · '+esc(bb(a.b).name)+'</div></div><div class="row"><button class="small primary" data-act="zusage" data-id="'+a.id+'" data-z="zugesagt">Zusagen</button><button class="small" data-act="zusage" data-id="'+a.id+'" data-z="abgesagt">Absagen</button></div></li>').join('')+'</ul>':(vreq.length?'':'<p class="muted">Keine offenen Anfragen.</p>'))+'</section>';
  const wvs=A.filter(a=>a.wv&&a.wv<=HEUTE&&open(a)&&(a.p===me||isMem(a.b,me)));
  h+='<section class="panel"><h3>Wiedervorlagen ('+wvs.length+')</h3>'+(wvs.length?'<ul class="list">'+wvs.map(a=>'<li><div class="main"><button class="link" data-act="aufgabe" data-id="'+a.id+'">'+esc(a.wvText)+'</button><div class="muted" style="font-size:13px">'+esc(a.t)+'</div></div></li>').join('')+'</ul>':'<p class="muted">Nichts fällig.</p>')+'</section>';
  h+='<section class="panel"><h3>Heute</h3>'+(today.length?today.map(evHtml).join(''):'<p class="muted">Keine Termine.</p>')+'</section></div></div>';
@@ -449,11 +450,14 @@ function vBereich(){const b=bb(S.b),me=S.me,mem=M.filter(m=>m.b===b.id);
  const pending=mem.find(m=>m.p===me&&m.status==='angefragt');
  if(!canSee(b.id)){
   return h+'<div class="box"><p><strong>Dieser Bereich ist nur für Zuständige sichtbar.</strong> Die Aufgaben liegen auf einer eigenen, geschützten SharePoint-Seite.</p>'+
-  (pending?'<p>Deine Anfrage ist gestellt. Ein Admin bestätigt sie und gibt dir den Zugang.</p>':'<p>Du kannst beitreten. Weil der Bereich sensibel ist, bestätigt ein Admin den Beitritt.</p><button class="primary" data-act="join" data-b="'+b.id+'">Beitritt anfragen</button>')+'</div></div>';}
+  (pending?'<p>Deine Anfrage ist gestellt. Ein Admin bestätigt sie und gibt dir den Zugang.</p>':'<p>Du kannst beitreten. Weil der Bereich sensibel ist, bestätigt ein Admin den Beitritt.</p><div class="row"><button class="primary" data-act="join" data-b="'+b.id+'">Beitritt anfragen</button><button data-act="join" data-b="'+b.id+'" data-r="Vertretung">Als Vertretung anfragen</button></div>')+'</div></div>';}
  const z=mem.filter(m=>m.status==='aktiv');
  h+='<div class="row"><span class="muted">Zuständig:</span>'+(z.filter(m=>m.r==='zuständig').map(m=>'<span class="chip">'+esc(pn(m.p))+'</span>').join('')||'<span class="chip crit">niemand</span>')+
  '<span class="muted">Vertretung:</span>'+(z.filter(m=>m.r==='Vertretung').map(m=>'<span class="chip">'+esc(pn(m.p))+'</span>').join('')||'<span class="chip warn">fehlt</span>')+
- (isMem(b.id,me)?'<span class="chip ok">Du bist dabei</span><button class="small" data-act="form" data-f="verlassen">Bereich verlassen</button>':'<button class="primary small" data-act="join" data-b="'+b.id+'">Beitreten</button>')+'</div>';
+ mem.filter(m=>m.status==='gefragt').map(m=>'<span class="chip">'+esc(pn(m.p))+' gefragt</span>').join('')+
+ (isMem(b.id,me)?'<span class="chip ok">Du bist dabei'+(mem.some(m=>m.p===me&&m.status==='aktiv'&&m.r==='Vertretung')?' (Vertretung)':'')+'</span><button class="small" data-act="form" data-f="vertr">Vertretung anfragen</button><button class="small" data-act="form" data-f="verlassen">Bereich verlassen</button>':'<button class="primary small" data-act="join" data-b="'+b.id+'">Beitreten</button><button class="small" data-act="join" data-b="'+b.id+'" data-r="Vertretung">Als Vertretung beitreten</button>')+'</div>';
+ if(S.form==='vertr'&&isMem(b.id,me)){const frei=P.filter(p=>!mem.some(m=>m.p===p.id));
+  h+='<div class="box" style="margin-top:10px">'+(frei.length?'<form class="inline" data-form="vfrag" data-b="'+b.id+'"><label>Wen fragst du?<select id="vf-p">'+frei.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('')+'</select></label><button class="primary">Anfragen</button></form><p class="muted" style="font-size:13px">Die Person sieht die Anfrage auf ihrer Startseite und sagt zu oder ab. Wer zusagt, ist Vertretung.</p>':'<p>Alle im Team sind schon in diesem Bereich.</p>')+'</div>';}
  if(S.form==='verlassen'){const rest=M.filter(m=>m.b===b.id&&m.p!==me&&m.status==='aktiv'&&m.r==='zuständig'),offen=A.filter(a=>a.b===b.id&&a.p===me&&open(a));
   h+='<div class="box" style="margin-top:10px"><p><strong>Bereich „'+esc(b.name)+'“ wirklich verlassen?</strong></p>'+
   (rest.length?'':'<p>Danach ist <strong>niemand mehr zuständig</strong>. Das erscheint in der Übersicht für die Runde.</p>')+
@@ -478,7 +482,7 @@ function vBereich(){const b=bb(S.b),me=S.me,mem=M.filter(m=>m.b===b.id);
    h+='<form class="inline" data-form="punkt" data-v="'+v.id+'"><label>Art<select id="pt-typ-'+v.id+'"><option>Schritt</option><option>Einsatz</option><option>Anforderung</option><option>Packliste</option><option>Tipp</option></select></label><label class="grow">Neuer Punkt<input id="pt-text-'+v.id+'" required placeholder="z. B. Verlängerungskabel"></label><button>Ergänzen</button></form></section>'});
  }else{
   h+='<div class="panel scroll"><table><thead><tr><th>Person</th><th>Rolle</th><th>Darf freigeben</th><th>Seit</th><th>Stand</th></tr></thead><tbody>'+
-  mem.map(m=>'<tr><td>'+esc(pn(m.p))+'</td><td>'+m.r+'</td><td>'+(m.f?'ja':'nein')+'</td><td>'+fd(m.seit)+'</td><td>'+(m.status==='aktiv'?'aktiv':'<span class="chip warn">wartet auf Bestätigung</span>')+'</td></tr>').join('')+'</tbody></table>'+
+  mem.map(m=>'<tr><td>'+esc(pn(m.p))+'</td><td>'+m.r+'</td><td>'+(m.f?'ja':'nein')+'</td><td>'+fd(m.seit)+'</td><td>'+(m.status==='aktiv'?'aktiv':'<span class="chip warn">'+(m.status==='gefragt'?'gefragt, wartet auf Zusage':'wartet auf Bestätigung')+'</span>')+'</td></tr>').join('')+'</tbody></table>'+
   '<p class="muted" style="font-size:13px">Bereiche behält man dauerhaft, bis man selbst wechseln will. Wer beitritt, ist zuständig. Bei Finanzen, Personal und Mitglieder bestätigt ein Admin den Beitritt.</p></div>';
  }
  return h+'</div>'}
@@ -580,7 +584,7 @@ function vRunde(){const op=A.filter(open);const sec=(t,arr,f)=>'<section class="
  h+=sec('Noch ohne Person',op.filter(ohneP).filter(vis),a=>aItem(a,true));
  h+=sec('Bereiche ohne Zuständige',B.filter(b=>!M.some(m=>m.b===b.id&&m.status==='aktiv'&&m.r==='zuständig')),b=>'<li><button class="link" data-act="bereich" data-b="'+b.id+'">'+esc(b.name)+'</button></li>');
  const req=M.filter(m=>m.status==='angefragt');
- h+=sec('Beitrittsanfragen (sensible Bereiche)',req,m=>'<li><div class="main">'+esc(pn(m.p))+' möchte zu <strong>'+esc(bb(m.b).name)+'</strong></div>'+(ADMINS.includes(S.me)?'<button class="small primary" data-act="bestaetigen" data-b="'+m.b+'" data-p="'+m.p+'">Bestätigen</button>':'<span class="muted" style="font-size:13px">Admin bestätigt</span>')+'</li>');
+ h+=sec('Beitrittsanfragen (sensible Bereiche)',req,m=>'<li><div class="main">'+esc(pn(m.p))+' möchte zu <strong>'+esc(bb(m.b).name)+'</strong>'+(m.r==='Vertretung'?' (als Vertretung)':'')+'</div>'+(ADMINS.includes(S.me)?'<button class="small primary" data-act="bestaetigen" data-b="'+m.b+'" data-p="'+m.p+'">Bestätigen</button>':'<span class="muted" style="font-size:13px">Admin bestätigt</span>')+'</li>');
  h+=sec('Einkaufsliste',EK,e=>'<li><button class="link" data-act="nav" data-v="einkauf">'+esc(e.n)+'</button> <span class="muted">· '+e.m+' Stück · '+esc(e.grund)+'</span></li>');
  const k=konflikte();
  h+=sec('Mögliche Doppelbelegungen',k,p=>'<li>'+fd(p[0].d)+', '+esc(p[0].o)+': '+esc(p[0].t)+' / '+esc(p[1].t)+'</li>');
@@ -860,8 +864,12 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
  else if(act==='form'){S.form=S.form===d.f?'':d.f;render()}
  else if(act==='neu')go('neu',{b:d.b||null,vorlage:d.v?+d.v:null});
  else if(act==='join'){const b=bb(d.b);
-  if(b.s){M.push({b:b.id,p:S.me,r:'zuständig',f:true,seit:HEUTE,status:'angefragt'});toast('Anfrage gestellt. Ein Admin bestätigt sie.')}
-  else{M.push({b:b.id,p:S.me,r:'zuständig',f:true,seit:HEUTE,status:'aktiv'});toast('Du bist jetzt zuständig für '+b.name+'.')}render()}
+  const r=d.r||'zuständig';for(let i=M.length-1;i>=0;i--){if(M[i].b===b.id&&M[i].p===S.me&&M[i].status==='gefragt')M.splice(i,1)}
+  if(b.s){M.push({b:b.id,p:S.me,r,f:true,seit:HEUTE,status:'angefragt'});toast('Anfrage gestellt. Ein Admin bestätigt sie.')}
+  else{M.push({b:b.id,p:S.me,r,f:true,seit:HEUTE,status:'aktiv'});toast(r==='Vertretung'?'Du bist jetzt Vertretung für '+b.name+'.':'Du bist jetzt zuständig für '+b.name+'.')}render()}
+ else if(act==='vzusage'){const m=M.find(x=>x.b===d.b&&x.p===S.me&&x.status==='gefragt');if(!m)return;
+  if(d.z==='ja'){m.seit=HEUTE;m.status=bb(d.b).s?'angefragt':'aktiv';toast(bb(d.b).s?'Zugesagt. Weil der Bereich sensibel ist, bestätigt noch ein Admin.':'Zugesagt. Du bist jetzt Vertretung für '+bb(d.b).name+'.')}
+  else{M.splice(M.indexOf(m),1);toast('Abgesagt. '+pn(m.von)+' bekommt einen Hinweis.')}render()}
  else if(act==='leave'){for(let i=M.length-1;i>=0;i--){if(M[i].b===d.b&&M[i].p===S.me)M.splice(i,1)}
   A.forEach(a=>{if(a.b===d.b&&a.p===S.me&&open(a)){a.p='';a.z='';logA(a,'Frei geworden, weil '+pn(S.me)+' den Bereich verlassen hat')}});S.form='';toast('Du hast den Bereich verlassen.');render()}
  else if(act==='bestaetigen'){const m=M.find(x=>x.b===d.b&&x.p===d.p&&x.status==='angefragt');if(m)m.status='aktiv';toast('Bestätigt. In echt bekommt die Person jetzt Zugang zur geschützten Seite.');render()}
@@ -936,7 +944,8 @@ document.addEventListener('input',e=>{const el=e.target,d=el.dataset;
  else{kk[d.kz][d.c]=Math.max(0,Math.floor(+el.value||0));set('kz-'+s+'-'+d.kz+'-'+d.c,cent(d.c*kk[d.kz][d.c]))}
  const r=kCalc(kk);set('kz-'+s+'-sa',cent(r.a));set('kz-'+s+'-se',cent(r.e));set('kz-'+s+'-erg',ergHtml(r,s))});
 document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.dataset,a=S.a&&A.find(x=>x.id===S.a),val=id=>(document.getElementById(id)||{}).value;
- if(d.form==='kommentar'){const t=val('km').trim();if(!t)return;a.k.push({p:S.me,t,am:now()});
+ if(d.form==='vfrag'){const pp=val('vf-p');if(!pp)return;M.push({b:d.b,p:pp,r:'Vertretung',f:true,seit:HEUTE,status:'gefragt',von:S.me});S.form='';toast(pn(pp)+' wurde gefragt und sieht die Anfrage auf der Startseite.');render()}
+ else if(d.form==='kommentar'){const t=val('km').trim();if(!t)return;a.k.push({p:S.me,t,am:now()});
   if(a.fn&&!a.fg&&S.fv==='kommentar'&&/^Freigegeben:/i.test(t)){a.fg={von:S.me,am:now(),art:'kommentar'};logA(a,'Freigegeben (Kommentar)');toast('Als Freigabe übernommen.')}render()}
  else if(d.form==='invdel'){const x=INV.find(i=>i.id===+d.x),n=Math.min(Math.max(1,+val('id-m')||1),x.m),g=val('id-g'),cb=document.getElementById('id-ek'),ek=cb?cb.checked:false;
   x.m-=n;let msg=n+' × '+x.n+' ausgetragen';
