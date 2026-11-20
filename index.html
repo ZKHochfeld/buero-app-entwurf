@@ -308,10 +308,10 @@ const VL=[
 
 const TAGE=['Mo','Di','Mi','Do','Fr','Sa','So'];
 const V=[];let vid=1;
-function zeit(p,tage,von,bis,art){tage.forEach(t=>V.push({id:vid++,p,tag:t,von,bis,art}))}
+function zeit(p,tage,von,bis,art,b){tage.forEach(t=>V.push({id:vid++,p,tag:t,von,bis,art,b:b||[]}))}
 zeit('alex',['Mo','Di','Mi','Do','Fr'],'09:00','15:00','fest');
-zeit('deniz',['Mo','Di','Mi','Do'],'10:00','16:00','fest');zeit('deniz',['Sa'],'12:00','16:00','freiwillig');
-zeit('mira',['Di','Mi','Do','Fr'],'11:00','17:00','fest');zeit('mira',['Sa'],'12:00','18:00','freiwillig');zeit('mira',['So'],'12:00','16:00','freiwillig');
+zeit('deniz',['Mo','Di','Mi','Do'],'10:00','16:00','fest');zeit('deniz',['Sa'],'12:00','16:00','freiwillig',['ft','bg']);
+zeit('mira',['Di','Mi','Do','Fr'],'11:00','17:00','fest');zeit('mira',['Sa'],'12:00','18:00','freiwillig');zeit('mira',['So'],'12:00','16:00','freiwillig',['kj']);
 zeit('sam',['Mo','Di','Mi','Do','Fr'],'11:00','17:00','fest');zeit('sam',['Sa','So'],'12:00','16:00','freiwillig');
 zeit('jona',['Mi','Do','Fr'],'14:00','20:00','fest');zeit('jona',['Sa'],'10:00','20:00','freiwillig');
 
@@ -379,8 +379,11 @@ const ohneP=a=>!a.p&&!a.ext;
 function abwesend(p,d){return E.some(e=>e.cal==='ur'&&e.p===p&&e.d===d)}
 function verfuegbar(p,a){
  if(abwesend(p,a.datum))return {ok:false,txt:'abwesend'};
- const v=V.find(x=>x.p===p&&x.tag===wt(a.datum)&&x.von<=a.von&&x.bis>=a.bis);
- return v?{ok:true,txt:v.art==='fest'?'Arbeitszeit':'freiwillig'}:{ok:false,txt:'keine Zeit eingetragen'};
+ const vs=V.filter(x=>x.p===p&&x.tag===wt(a.datum)&&x.von<=a.von&&x.bis>=a.bis);
+ if(!vs.length)return {ok:false,txt:'keine Zeit eingetragen'};
+ const v=vs.find(x=>!(x.b||[]).length||x.b.includes(a.b));
+ if(!v)return {ok:false,txt:'möchte lieber: '+[...new Set(vs.flatMap(x=>x.b))].map(k=>bb(k).name).join(', ')};
+ return {ok:true,txt:(v.art==='fest'?'Arbeitszeit':'freiwillig')+((v.b||[]).length?' · '+bb(a.b).name:'')};
 }
 function konflikte(){const r=[],rb=E.filter(e=>e.cal==='rb'&&e.von);
  for(let i=0;i<rb.length;i++)for(let j=i+1;j<rb.length;j++){const x=rb[i],y=rb[j];
@@ -510,19 +513,19 @@ function vAufgabe(){const a=A.find(x=>x.id===S.a),b=bb(a.b),me=S.me,par=a.parent
  '<label for="erl" class="muted" style="font-size:15px">Wer hakt ab?</label><select id="erl" data-act="erl">'+Object.keys(ERL).map(k=>'<option value="'+k+'"'+(a.erl===k?' selected':'')+'>'+ERL[k]+'</option>').join('')+'</select>'+
  '<span class="muted">Weitere Personen</span><span>'+(a.mit.length?a.mit.map(x=>esc(pn(x))).join(', '):'–')+' <select data-act="mitadd" aria-label="Weitere Person dazu"><option value="">+ Person</option>'+P.filter(x=>x.id!==a.p&&!a.mit.includes(x.id)).map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('')+'</select></span>'+
  '<label for="fs" class="muted" style="font-size:15px">Fortschritt</label><select id="fs" data-act="fs">'+['offen','arbeit','erledigt'].map(k=>'<option value="'+k+'"'+(a.fs===k?' selected':'')+'>'+FS[k]+'</option>').join('')+(a.fs==='abgesagt'?'<option selected>Abgesagt</option>':'')+'</select>'+
- '</div>'+(a.notiz?'<p>'+esc(a.notiz)+'</p>':'')+(a.erl==='jeder'?'<div class="box" style="margin-top:10px"><p><strong>Jede Person hakt für sich ab:</strong></p>'+[a.p].concat(a.mit).filter(Boolean).map(x=>'<label class="check" style="flex-direction:row;color:var(--fg)"><input type="checkbox" data-act="done" data-p="'+x+'"'+(a.done[x]?' checked':'')+(x!==me?' disabled':'')+'> '+esc(pn(x))+(a.done[x]?' <span class="chip ok">erledigt</span>':'')+'</label>').join('')+'</div>':'')+(a.fs==='abgesagt'?'<div class="box crit"><p><strong>Abgesagt.</strong> Grund: '+esc(a.grund)+'</p><p class="muted" style="font-size:13px">Die Absage erscheint in der Übersicht für die Runde.</p></div>':'')+
+ '</div>'+(a.notiz?'<p>'+esc(a.notiz)+'</p>':'')+(a.erl==='jeder'?'<div class="box" style="margin-top:10px"><p><strong>Jede Person hakt für sich ab:</strong></p>'+[a.p].concat(a.mit).filter(Boolean).map(x=>'<label class="check" style="flex-direction:row;color:var(--fg)"><input type="checkbox" data-act="done" data-p="'+x+'"'+(a.done[x]?' checked':'')+(x!==me?' disabled':'')+'> '+esc(pn(x))+(a.done[x]?' <span class="chip ok">erledigt</span>':'')+'</label>').join('')+'</div>':'')+(a.fs==='abgesagt'?'<div class="box crit"><p><strong>Abgesagt.</strong>'+(a.grund?' Grund: '+esc(a.grund):'')+'</p><p class="muted" style="font-size:13px">Die Absage erscheint in der Übersicht für die Runde.</p></div>':'')+
  '<div class="row" style="margin-top:12px">'+(a.p!==me&&open(a)?'<button class="primary" data-act="nehme">Ich mach das</button>':'')+(a.p===me&&a.z==='angefragt'?'<button class="primary" data-act="zusage" data-id="'+a.id+'" data-z="zugesagt">Zusagen</button><button data-act="zusage" data-id="'+a.id+'" data-z="abgesagt">Absagen</button>':'')+
  (open(a)&&!a.parent&&isMem(b.id,me)?'<button data-act="form" data-f="absage">Anfrage absagen</button>':'')+(open(a)?'<button data-act="form" data-f="hilfe">Hilfe anfordern</button>':'')+'</div>';
  if(a.hilfe.length)h+='<div class="box" style="margin-top:10px"><p><strong>Hilfe angefordert</strong></p><ul class="list">'+a.hilfe.map(x=>'<li><div class="main">'+esc(pn(x.von))+' fragt '+esc(pn(x.an))+': „'+esc(x.t)+'“<div class="muted" style="font-size:13px">'+esc(x.am)+'</div></div><span class="chip'+(x.st==='hilft'?' ok':x.st==='nein'?' warn':'')+'">'+({offen:'wartet auf Antwort',hilft:'hilft',nein:'kann gerade nicht'})[x.st]+'</span></li>').join('')+'</ul></div>';
  if(S.form==='hilfe')h+='<form class="inline" data-form="hilfe"><label>Wen fragst du?<select id="hi-p">'+P.filter(x=>x.id!==me).map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('')+'</select></label><label class="grow">Wobei brauchst du Hilfe?<input id="hi-t" required placeholder="z. B. Ich schaffe die Abrechnung heute nicht allein"></label><button class="primary">Hilfe anfordern</button></form><p class="muted" style="font-size:13px">Die Person bekommt sofort eine E-Mail und eine Teams-Nachricht (in echt über Power Automate) und sieht die Anfrage auf ihrer Startseite.</p>';
  if(S.form==='wv')h+='<form class="inline" data-form="wv"><label>Wiedervorlage am<input id="wv-d" type="date" value="'+(a.wv||'2026-11-24')+'" required></label><label class="grow">Woran erinnern?<input id="wv-t" required value="'+esc(a.wvText)+'" placeholder="z. B. Rückruf wegen Gästezahl"></label><button class="primary">Speichern</button></form>';
  if(S.form==='rem')h+='<form class="inline" data-form="rem"><label>Erinnern am<input id="rem-d" type="date" value="'+(a.rem||a.frist||HEUTE)+'" required></label><label>An wen<select id="rem-an">'+Object.keys(REMAN).map(k=>'<option value="'+k+'"'+(a.remAn===k?' selected':'')+'>'+REMAN[k]+'</option>').join('')+'</select></label><button class="primary">Speichern</button></form><p class="muted" style="font-size:13px">In echt schickt Power Automate an dem Tag eine E-Mail oder Teams-Nachricht. Bei zugesagten Einsätzen erinnert die App von selbst.</p>';
- if(S.form==='absage')h+='<form class="inline" data-form="absage"><label class="grow">Kurzer Grund (erscheint in der Runde)<input id="ab-g" required placeholder="z. B. Aufwand zu groß, wir brauchen eine Pause"></label><button class="primary">Absagen</button></form>';
+ if(S.form==='absage')h+='<form class="inline" data-form="absage"><label class="grow">Grund (freiwillig, erscheint in der Runde)<input id="ab-g" placeholder="z. B. Aufwand zu groß, wir brauchen eine Pause"></label><button class="primary">Absagen</button></form>';
  h+='</section>';
  // rechts: Einsatz-Planung oder Freigabe
  h+='<div style="display:flex;flex-direction:column;gap:14px;min-width:0">';
  if(isEinsatz(a)&&open(a)){
-  h+='<section class="panel"><h3>Wer kann? ('+fd(a.datum)+', '+a.von+'–'+a.bis+')</h3><p class="muted" style="font-size:13px;margin-top:0">Vorgeschlagen werden nur Leute, deren eingetragene Zeiten passen. Niemand wird ohne eigene Zusage fest eingeplant.</p><ul class="list">'+
+  h+='<section class="panel"><h3>Wer kann? ('+fd(a.datum)+', '+a.von+'–'+a.bis+')</h3><p class="muted" style="font-size:13px;margin-top:0">Vorgeschlagen werden nur Leute, deren eingetragene Zeiten und Bereiche passen. Niemand wird ohne eigene Zusage fest eingeplant.</p><ul class="list">'+
   P.map(p=>{const v=verfuegbar(p.id,a);return '<li><div class="main">'+esc(p.name)+' <span class="chip'+(v.ok?' ok':'')+'">'+v.txt+'</span></div>'+(v.ok&&a.p!==p.id?'<button class="small" data-act="anfragen" data-p="'+p.id+'">Anfragen</button>':a.p===p.id?'<span class="chip warn">'+(a.z==='zugesagt'?'hat zugesagt':'angefragt')+'</span>':'')+'</li>'}).join('')+'</ul></section>';
  }
  if(isEinsatz(a)&&open(a))h+=extHtml(a);
@@ -576,18 +579,19 @@ function vKalender(){const k=konflikte();let h='<div class="wrap"><h1>Kalender</
 
 function vZeiten(){const me=S.me,mine=V.filter(v=>v.p===me).sort((a,b)=>TAGE.indexOf(a.tag)-TAGE.indexOf(b.tag)||a.von.localeCompare(b.von));
  let h='<div class="wrap"><h1>Meine Zeiten</h1><p class="sub">Trag ein, wann du arbeitest und wann du freiwillig einspringen würdest. Eingeplant wirst du nur in diesen Zeiten, und nur mit deiner Zusage.</p>';
- h+='<section class="panel scroll"><table><thead><tr><th>Tag</th><th>Von</th><th>Bis</th><th>Art</th><th></th></tr></thead><tbody>'+(mine.length?mine.map(v=>'<tr><td>'+v.tag+'</td><td>'+v.von+'</td><td>'+v.bis+'</td><td><span class="chip'+(v.art==='fest'?'':' warn')+'">'+(v.art==='fest'?'Arbeitszeit':'freiwillig')+'</span></td><td><button class="small" data-act="zdel" data-id="'+v.id+'">Entfernen</button></td></tr>').join(''):'<tr><td colspan="5" class="muted">Noch keine Zeiten eingetragen.</td></tr>')+'</tbody></table>'+
- '<form class="inline" data-form="zeit"><label>Tag<select id="z-tag">'+TAGE.map(t=>'<option>'+t+'</option>').join('')+'</select></label><label>Von<input id="z-von" type="time" value="11:00" required></label><label>Bis<input id="z-bis" type="time" value="17:00" required></label><label>Art<select id="z-art"><option value="fest">Arbeitszeit</option><option value="freiwillig">freiwillig</option></select></label><button class="primary">Hinzufügen</button></form></section>';
+ h+='<section class="panel scroll"><table><thead><tr><th>Tag</th><th>Von</th><th>Bis</th><th>Art</th><th>Bereiche</th><th></th></tr></thead><tbody>'+(mine.length?mine.map(v=>'<tr><td>'+v.tag+'</td><td>'+v.von+'</td><td>'+v.bis+'</td><td><span class="chip'+(v.art==='fest'?'':' warn')+'">'+(v.art==='fest'?'Arbeitszeit':'freiwillig')+'</span></td><td style="font-size:13px">'+((v.b||[]).length?v.b.map(k=>esc(bb(k).name)).join(', '):'<span class="muted">egal</span>')+'</td><td><button class="small" data-act="zdel" data-id="'+v.id+'">Entfernen</button></td></tr>').join(''):'<tr><td colspan="6" class="muted">Noch keine Zeiten eingetragen.</td></tr>')+'</tbody></table>'+
+ '<form class="inline" data-form="zeit"><label>Tag<select id="z-tag">'+TAGE.map(t=>'<option>'+t+'</option>').join('')+'</select></label><label>Von<input id="z-von" type="time" value="11:00" required></label><label>Bis<input id="z-bis" type="time" value="17:00" required></label><label>Art<select id="z-art"><option value="fest">Arbeitszeit</option><option value="freiwillig">freiwillig</option></select></label><button class="primary">Hinzufügen</button>'+
+ '<details style="flex-basis:100%"><summary>In welchen Bereichen? (freiwillig, ohne Auswahl: egal)</summary><div class="row" style="flex-wrap:wrap;gap:4px 14px;margin-top:6px">'+B.map(b=>'<label style="flex-direction:row;gap:6px;align-items:center;color:var(--fg)"><input type="checkbox" class="z-b" value="'+b.id+'">'+esc(b.name)+'</label>').join('')+'</div></details></form></section>';
  h+='<h2>Zeiten im Team</h2><section class="panel scroll"><table><thead><tr><th>Person</th>'+TAGE.map(t=>'<th>'+t+'</th>').join('')+'</tr></thead><tbody>'+
- P.map(p=>'<tr><td>'+esc(p.name)+'</td>'+TAGE.map(t=>{const v=V.filter(x=>x.p===p.id&&x.tag===t);return '<td style="font-size:13px;white-space:nowrap">'+v.map(x=>(x.art==='freiwillig'?'<span class="muted">':'<span>')+x.von.slice(0,2)+'–'+x.bis.slice(0,2)+(x.art==='freiwillig'?' fr.':'')+'</span>').join('<br>')+'</td>'}).join('')+'</tr>').join('')+
- '</tbody></table><p class="muted" style="font-size:13px">„fr.“ heißt freiwillig. Diese Zeiten sieht das ganze Team.</p></section></div>';
+ P.map(p=>'<tr><td>'+esc(p.name)+'</td>'+TAGE.map(t=>{const v=V.filter(x=>x.p===p.id&&x.tag===t);if(p.id!==me)return '<td style="font-size:13px">'+(v.length?'<span class="chip ok">verfügbar</span>':'')+'</td>';return '<td style="font-size:13px;white-space:nowrap">'+v.map(x=>(x.art==='freiwillig'?'<span class="muted">':'<span>')+x.von.slice(0,2)+'–'+x.bis.slice(0,2)+(x.art==='freiwillig'?' fr.':'')+'</span>').join('<br>')+'</td>'}).join('')+'</tr>').join('')+
+ '</tbody></table><p class="muted" style="font-size:13px">Bei dir siehst du die genauen Zeiten („fr.“ heißt freiwillig). Die anderen sehen nur, an welchen Tagen du verfügbar bist. Ob deine Zeit und dein Bereich passen, sieht nur, wer einen Einsatz plant.</p></section></div>';
  return h}
 
 function vRunde(){const op=A.filter(open);const sec=(t,arr,f)=>'<section class="panel"><h3>'+t+' ('+arr.length+')</h3>'+(arr.length?'<ul class="list">'+arr.map(f).join('')+'</ul>':'<p class="muted">Nichts.</p>')+'</section>';
  const vis=a=>canSee(a.b);
  let h='<div class="wrap"><h1>Büro-Runde</h1><p class="sub">Für Montag, 23.11., 10 Uhr. Die App sammelt das von selbst.</p><div class="cols">';
  h+=sec('Überfällig',op.filter(over).filter(vis),a=>aItem(a,true));
- h+=sec('Absagen dieser Woche',A.filter(a=>a.fs==='abgesagt').filter(vis),a=>'<li><div class="main"><button class="link" data-act="aufgabe" data-id="'+a.id+'">'+esc(a.t)+'</button><div class="muted" style="font-size:13px">'+esc(bb(a.b).name)+' · '+esc(pn(a.p))+' · Grund: '+esc(a.grund)+'</div></div></li>');
+ h+=sec('Absagen dieser Woche',A.filter(a=>a.fs==='abgesagt').filter(vis),a=>'<li><div class="main"><button class="link" data-act="aufgabe" data-id="'+a.id+'">'+esc(a.t)+'</button><div class="muted" style="font-size:13px">'+esc(bb(a.b).name)+' · '+esc(pn(a.p))+(a.grund?' · Grund: '+esc(a.grund):'')+'</div></div></li>');
  h+=sec('Freigabe fehlt',op.filter(a=>a.fn&&!a.fg).filter(vis),a=>aItem(a,true));
  h+=sec('Noch ohne Person',op.filter(ohneP).filter(vis),a=>aItem(a,true));
  h+=sec('Bereiche ohne Zuständige',B.filter(b=>!M.some(m=>m.b===b.id&&m.status==='aktiv'&&m.r==='zuständig')),b=>'<li><button class="link" data-act="bereich" data-b="'+b.id+'">'+esc(b.name)+'</button></li>');
@@ -1198,7 +1202,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.d
   if(x.st==='reparatur'){S.invMsg='<strong>In Reparatur:</strong> '+esc(x.n)+' ist gerade nicht verfügbar.';render();return}
   if(am.length>=x.m){S.invMsg='<strong>Schon belegt:</strong> '+esc(x.n)+' ist am '+fd(dd)+' reserviert für „'+esc(am[0].z)+'“. Sprich dich mit '+esc(pn(am[0].p))+' ab.';render()}
   else{x.res.push({d:dd,z,p:S.me});S.invMsg='';toast('Reserviert: '+x.n+', '+fd(dd)+'.');render()}}
- else if(d.form==='absage'){a.fs='abgesagt';a.grund=val('ab-g');logA(a,'Abgesagt: '+a.grund);S.form='';toast('Abgesagt. Steht jetzt in der Übersicht für die Runde.');render()}
+ else if(d.form==='absage'){a.fs='abgesagt';a.grund=(val('ab-g')||'').trim();logA(a,a.grund?'Abgesagt: '+a.grund:'Abgesagt');S.form='';toast('Abgesagt. Steht jetzt in der Übersicht für die Runde.');render()}
  else if(d.form==='punkt'){const v=VL.find(x=>x.id===+d.v);v.items.push({typ:val('pt-typ-'+v.id),t:val('pt-text-'+v.id),von:S.me});toast('Ergänzt. Danke!');render()}
  else if(d.form==='aufgabe'){const art=val('na-art'),ein=['Einsatz','Theke'].includes(art),dd=val('na-d');
   const n=T({ersteller:S.me,t:val('na-t'),b:d.b,parent:d.parent?+d.parent:null,art,frist:dd,datum:ein?dd:'',von:ein?val('na-von'):'',bis:ein?val('na-bis'):''});
@@ -1209,7 +1213,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,d=f.d
   v.items.filter(i=>i.typ==='Schritt'||i.typ==='Anforderung').forEach(i=>T({t:(i.typ==='Anforderung'?'Klären: ':'')+i.t,b:v.b,parent:par.id,frist:dd}));
   v.items.filter(i=>i.typ==='Einsatz').forEach(i=>T({t:i.t,b:v.b,parent:par.id,art:'Einsatz',datum:dd,von:'14:00',bis:'18:00',frist:dd}));
   toast('Vorgang mit '+A.filter(x=>x.parent===par.id).length+' Teilaufgaben angelegt.');go('aufgabe',{a:par.id})}
- else if(d.form==='zeit'){V.push({id:vid++,p:S.me,tag:val('z-tag'),von:val('z-von'),bis:val('z-bis'),art:val('z-art')});toast('Zeit eingetragen.');render()}
+ else if(d.form==='zeit'){V.push({id:vid++,p:S.me,tag:val('z-tag'),von:val('z-von'),bis:val('z-bis'),art:val('z-art'),b:[...document.querySelectorAll('.z-b:checked')].map(x=>x.value)});toast('Zeit eingetragen.');render()}
 });
 render();
 </script>
